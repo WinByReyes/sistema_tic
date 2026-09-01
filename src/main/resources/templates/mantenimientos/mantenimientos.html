@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Mantenimientos - Sistema TIC
+    </title>
+
+    <link
+            rel="stylesheet"
+            href="/css/estilos.css">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            TIC
+        </div>
+
+        <div class="logo-text">
+
+            <h2>
+                SISTEMA TIC
+            </h2>
+
+            <span>
+                Gestión institucional
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="menu-item">
+            <span class="menu-icon">⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a href="/usuarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Usuarios</span>
+        </a>
+
+        <a href="/funcionarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Funcionarios</span>
+        </a>
+
+        <a href="/computadoras" class="menu-item">
+            <span class="menu-icon">▣</span>
+            <span>Computadoras</span>
+        </a>
+
+        <a href="/mantenimientos" class="menu-item active">
+            <span class="menu-icon">⚙</span>
+            <span>Mantenimientos</span>
+        </a>
+
+        <a href="/consultas" class="menu-item">
+            <span class="menu-icon">⌕</span>
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+
+            <a
+                    href="/administracion"
+                    class="menu-item"
+                    id="menuAdministracion">
+
+        <span class="menu-icon">
+            ⚙
+        </span>
+
+                <span>
+            Administración
+        </span>
+
+                <span class="menu-arrow">
+            ▸
+        </span>
+
+            </a>
+
+
+            <div class="submenu">
+
+                <a
+                        href="/usuarios"
+                        class="submenu-item">
+
+            <span>
+                ♙
+            </span>
+
+                    Usuarios
+
+                </a>
+
+
+                <a
+                        href="/funcionarios"
+                        class="submenu-item">
+
+            <span>
+                👷
+            </span>
+
+                    Funcionarios
+
+                </a>
+
+
+                <a
+                        href="/catalogos"
+                        class="submenu-item">
+
+            <span>
+                ⚙
+            </span>
+
+                    Catálogos
+
+                </a>
+
+                <a
+                        href="/auditoria"
+                        class="submenu-item">
+
+            <span>
+                ⌕
+            </span>
+
+                    Auditoría
+
+                </a>
+
+
+                <a
+                        href="/respaldos"
+                        class="submenu-item">
+
+            <span>
+                💾
+            </span>
+
+                    Respaldos
+
+                </a>
+
+
+                <a
+                        href="/configuracion-institucional"
+                        class="submenu-item">
+
+            <span>
+                ⌂
+            </span>
+
+                    Configuración Institucional
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <!-- =========================================
+         LOGOUT
+         ========================================= -->
+
+    <div class="sidebar-footer">
+
+        <a
+                href="#"
+                id="logout">
+
+            Cerrar sesión
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     CONTENIDO
+     ===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         CABECERA
+         ================================================= -->
+
+    <header class="topbar">
+
+        <div>
+
+            <h1>
+                Mantenimientos
+            </h1>
+
+            <p>
+                Registro y administración de mantenimientos
+            </p>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         LISTA
+         ================================================= -->
+
+    <section class="panel">
+
+        <div class="panel-header">
+
+            <h2>
+                Lista de mantenimientos
+            </h2>
+
+
+            <button
+                    class="btn btn-primary"
+                    onclick="abrirFormulario()">
+
+                + Nuevo mantenimiento
+
+            </button>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Computadora
+                    </th>
+
+                    <th>
+                        Responsable
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Tipo
+                    </th>
+
+                    <th>
+                        Estado mantenimiento
+                    </th>
+
+                    <th>
+                        Diagnóstico
+                    </th>
+
+                    <th>
+                        Costo
+                    </th>
+
+                    <th>
+                        Estado anterior
+                    </th>
+
+                    <th>
+                        Estado posterior
+                    </th>
+
+                    <th>
+                        Acciones
+                    </th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody
+                        id="tablaMantenimientos">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FORMULARIO
+         ================================================= -->
+
+    <section
+            id="formularioMantenimiento"
+            class="panel formulario-panel"
+            style="display:none;">
+
+
+        <div class="panel-header">
+
+            <h2 id="tituloFormulario">
+
+                Nuevo mantenimiento
+
+            </h2>
+
+        </div>
+
+
+
+        <form id="mantenimientoForm">
+
+
+            <input
+                    type="hidden"
+                    id="mantenimientoId">
+
+
+
+            <div class="form-grid">
+
+
+                <!-- =====================================
+                     COMPUTADORA
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="computadoraId">
+
+                        Computadora
+
+                    </label>
+
+
+                    <select
+                            id="computadoraId"
+                            required>
+
+                        <option value="">
+
+                            Seleccione una computadora
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     RESPONSABLE
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="responsableId">
+
+                        Responsable del mantenimiento
+
+                    </label>
+
+
+                    <select
+                            id="responsableId"
+                            required>
+
+                        <option value="">
+
+                            Seleccione un responsable
+
+                        </option>
+
+                    </select>
+
+                    <!-- =====================================
+                     OTRO RESPONSABLE (TEXTO LIBRE)
+                       ===================================== -->
+
+                    <div id="responsableOtroContainer" class="form-group" style="display:none;">
+
+                        <label for="responsableOtro">
+                            Escriba el nombre del responsable
+                        </label>
+
+                        <input
+                                type="text"
+                                id="responsableOtro"
+                                maxlength="150"
+                                placeholder="Ingrese el nombre del responsable">
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     USUARIO REGISTRADOR
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="usuarioRegistrador">
+
+                        Registrado por
+
+                    </label>
+
+
+                    <input
+                            type="text"
+                            id="usuarioRegistrador"
+                            readonly>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     FECHA
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="fechaMantenimiento">
+
+                        Fecha de mantenimiento
+
+                    </label>
+
+
+                    <input
+                            type="datetime-local"
+                            id="fechaMantenimiento"
+                            required>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     TIPO DE MANTENIMIENTO
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="tipoMantenimiento">
+
+                        Tipo de mantenimiento
+
+                    </label>
+
+
+                    <select
+                            id="tipoMantenimiento"
+                            required>
+
+                        <option value="">
+
+                            Seleccione un tipo
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =====================================
+                     OTRO TIPO
+                     ===================================== -->
+
+                <div
+                        id="tipoMantenimientoOtroContainer"
+                        class="form-group"
+                        style="display:none;">
+
+                    <label for="tipoMantenimientoOtro">
+
+                        Especifique el tipo de mantenimiento
+
+                    </label>
+
+
+                    <input
+                            type="text"
+                            id="tipoMantenimientoOtro"
+                            maxlength="100"
+                            placeholder="Ingrese el tipo de mantenimiento">
+
+                </div>
+
+
+
+                <!-- =====================================
+                     ESTADO DEL MANTENIMIENTO
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="estadoMantenimiento">
+
+                        Estado del mantenimiento
+
+                    </label>
+
+
+                    <select
+                            id="estadoMantenimiento"
+                            required>
+
+                        <option value="">
+
+                            Seleccione un estado
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =====================================
+                     OTRO ESTADO DE MANTENIMIENTO
+                     ===================================== -->
+
+                <div
+                        id="estadoMantenimientoOtroContainer"
+                        class="form-group"
+                        style="display:none;">
+
+                    <label for="estadoMantenimientoOtro">
+
+                        Especifique el estado del mantenimiento
+
+                    </label>
+
+
+                    <input
+                            type="text"
+                            id="estadoMantenimientoOtro"
+                            maxlength="100"
+                            placeholder="Ingrese el estado del mantenimiento">
+
+                </div>
+
+
+
+                <!-- =====================================
+                     DIAGNÓSTICO
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="diagnostico">
+
+                        Diagnóstico
+
+                    </label>
+
+
+                    <textarea
+                            id="diagnostico"
+                            required></textarea>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     TRABAJO REALIZADO
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="trabajoRealizado">
+
+                        Trabajo realizado
+
+                    </label>
+
+
+                    <textarea
+                            id="trabajoRealizado"
+                            required></textarea>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     COSTO
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="costo">
+
+                        Costo
+
+                    </label>
+
+
+                    <input
+                            type="number"
+                            id="costo"
+                            min="0"
+                            step="0.01"
+                            required>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     ESTADO ANTERIOR
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="estadoAnterior">
+
+                        Estado anterior de la computadora
+
+                    </label>
+
+
+                    <select
+                            id="estadoAnterior"
+                            required>
+
+                        <option value="">
+
+                            Seleccione un estado
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =====================================
+                     OTRO ESTADO ANTERIOR
+                     ===================================== -->
+
+                <div
+                        id="estadoAnteriorOtroContainer"
+                        class="form-group"
+                        style="display:none;">
+
+                    <label for="estadoAnteriorOtro">
+
+                        Especifique el estado anterior
+
+                    </label>
+
+
+                    <input
+                            type="text"
+                            id="estadoAnteriorOtro"
+                            maxlength="100"
+                            placeholder="Ingrese el estado anterior">
+
+                </div>
+
+
+
+                <!-- =====================================
+                     ESTADO POSTERIOR
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="estadoPosterior">
+
+                        Estado posterior de la computadora
+
+                    </label>
+
+
+                    <select
+                            id="estadoPosterior"
+                            required>
+
+                        <option value="">
+
+                            Seleccione un estado
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =====================================
+                     OTRO ESTADO POSTERIOR
+                     ===================================== -->
+
+                <div
+                        id="estadoPosteriorOtroContainer"
+                        class="form-group"
+                        style="display:none;">
+
+                    <label for="estadoPosteriorOtro">
+
+                        Especifique el estado posterior
+
+                    </label>
+
+
+                    <input
+                            type="text"
+                            id="estadoPosteriorOtro"
+                            maxlength="100"
+                            placeholder="Ingrese el estado posterior">
+
+                </div>
+
+
+
+                <!-- =====================================
+                     OBSERVACIONES
+                     ===================================== -->
+
+                <div class="form-group">
+
+                    <label for="observaciones">
+
+                        Observaciones
+
+                    </label>
+
+
+                    <textarea
+                            id="observaciones"
+                            required></textarea>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =========================================
+                 BOTONES
+                 ========================================= -->
+
+            <div class="form-buttons">
+
+
+                <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                    Guardar
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="cerrarFormulario()">
+
+                    Cancelar
+
+                </button>
+
+
+            </div>
+
+
+        </form>
+
+    </section>
+
+
+</main>
+
+
+
+<script src="/js/api.js"></script>
+<script src="/js/mantenimientos.js"></script>
+
+</body>
+
+</html>

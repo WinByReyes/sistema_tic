@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Configuración institucional - Sistema TIC
+    </title>
+
+    <link
+            rel="stylesheet"
+            href="/css/estilos.css">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            TIC
+        </div>
+
+        <div class="logo-text">
+
+            <h2>
+                SISTEMA TIC
+            </h2>
+
+            <span>
+                Gestión institucional
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="menu-item">
+            <span class="menu-icon">⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a href="/usuarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Usuarios</span>
+        </a>
+
+        <a href="/funcionarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Funcionarios</span>
+        </a>
+
+        <a href="/computadoras" class="menu-item">
+            <span class="menu-icon">▣</span>
+            <span>Computadoras</span>
+        </a>
+
+        <a href="/mantenimientos" class="menu-item">
+            <span class="menu-icon">⚙</span>
+            <span>Mantenimientos</span>
+        </a>
+
+        <a href="/consultas" class="menu-item">
+            <span class="menu-icon">⌕</span>
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+
+            <a
+                    href="/administracion"
+                    class="menu-item"
+                    id="menuAdministracion">
+
+        <span class="menu-icon">
+            ⚙
+        </span>
+
+                <span>
+            Administración
+        </span>
+
+                <span class="menu-arrow">
+            ▸
+        </span>
+
+            </a>
+
+
+            <div class="submenu">
+
+                <a
+                        href="/usuarios"
+                        class="submenu-item">
+
+            <span>
+                ♙
+            </span>
+
+                    Usuarios
+
+                </a>
+
+
+                <a
+                        href="/funcionarios"
+                        class="submenu-item">
+
+            <span>
+                👷
+            </span>
+
+                    Funcionarios
+
+                </a>
+
+
+                <a
+                        href="/catalogos"
+                        class="submenu-item">
+
+            <span>
+                ⚙
+            </span>
+
+                    Catálogos
+
+                </a>
+
+
+
+                <a
+                        href="/auditoria"
+                        class="submenu-item">
+
+            <span>
+                ⌕
+            </span>
+
+                    Auditoría
+
+                </a>
+
+
+                <a
+                        href="/respaldos"
+                        class="submenu-item">
+
+            <span>
+                💾
+            </span>
+
+                    Respaldos
+
+                </a>
+
+
+                <a
+                        href="/configuracion-institucional"
+                        class="submenu-item active">
+
+            <span>
+                ⌂
+            </span>
+
+                    Configuración Institucional
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+</aside>
+
+
+<!-- =====================================================
+     CONTENIDO
+     ===================================================== -->
+
+<main class="main-content">
+
+
+    <header class="dashboard-topbar-admin">
+
+        <div>
+
+            <h1>
+                Configuración institucional
+            </h1>
+
+            <p>
+                Datos generales de la institución
+            </p>
+
+        </div>
+
+    </header>
+
+
+
+    <section class="dashboard-layout">
+
+
+        <div class="dashboard-center">
+
+
+            <section class="panel">
+
+                <div class="panel-header">
+
+                    <h2>
+                        Datos de la institución
+                    </h2>
+
+                </div>
+
+
+                <form id="configuracionForm">
+
+                    <input
+                            type="hidden"
+                            id="configuracionId">
+
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="nombreInstitucion">
+                                Nombre de la institución
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="nombreInstitucion"
+                                    maxlength="200"
+                                    required>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="unidadAdministrativa">
+                                Unidad administrativa
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="unidadAdministrativa"
+                                    maxlength="200">
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="direccion">
+                                Dirección
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="direccion"
+                                    maxlength="250">
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="telefono">
+                                Teléfono
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="telefono"
+                                    maxlength="30">
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="correo">
+                                Correo institucional
+                            </label>
+
+                            <input
+                                    type="email"
+                                    id="correo"
+                                    maxlength="150">
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-buttons">
+
+                        <button
+                                type="submit"
+                                class="btn btn-primary">
+
+                            Guardar cambios
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+<script src="/js/api.js"></script>
+<script src="/js/configuracion.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+    <title>Consultas - Sistema TIC</title>
+
+    <link
+            rel="stylesheet"
+            href="/css/estilos.css">
+
+    <style>
+
+        /* ========================================
+           PESTAÑAS DE CONSULTA
+           ======================================== */
+
+        .consulta-tabs {
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+            margin-bottom: 24px;
+
+        }
+
+
+        .consulta-tab {
+
+            border: 1px solid #d1d5db;
+
+            background: #fff;
+
+            color: #374151;
+
+            padding: 12px 22px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: 600;
+
+        }
+
+
+        .consulta-tab.active,
+        .consulta-tab:hover {
+
+            background: #2563eb;
+
+            color: #fff;
+
+            border-color: #2563eb;
+
+        }
+
+
+        .consulta-panel {
+
+            display: none;
+
+        }
+
+
+        .consulta-panel.active {
+
+            display: block;
+
+        }
+
+
+        /* ========================================
+           RESULTADO COMPUTADORA
+           ======================================== */
+
+        .consulta-result-card {
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            padding: 20px;
+
+            margin-top: 20px;
+
+            background: #fff;
+
+        }
+
+
+        .consulta-result-card h3 {
+
+            margin: 0 0 5px;
+
+        }
+
+
+        .consulta-subtitle {
+
+            color: #6b7280;
+
+            margin: 0 0 18px;
+
+        }
+
+
+        .consulta-section {
+
+            border-top: 1px solid #e5e7eb;
+
+            padding-top: 18px;
+
+            margin-top: 18px;
+
+        }
+
+
+        .consulta-section h3 {
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .estado-actual {
+
+            padding: 14px;
+
+            border-radius: 8px;
+
+            background: #f3f4f6;
+
+        }
+
+
+        .sin-datos {
+
+            color: #6b7280;
+
+            text-align: center;
+
+            padding: 18px;
+
+        }
+
+
+        .resultado-computadora {
+
+            margin-bottom: 24px;
+
+        }
+
+
+        .form-grid-dos {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 16px;
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .form-grid-dos {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .consulta-tab {
+
+                flex: 1 1 100%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ========================================
+     SIDEBAR
+     ======================================== -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            TIC
+        </div>
+
+        <div class="logo-text">
+            <h2>SISTEMA TIC</h2>
+            <span>Gestión institucional</span>
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="menu-item">
+            <span class="menu-icon">⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a href="/usuarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Usuarios</span>
+        </a>
+
+        <a href="/funcionarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Funcionarios</span>
+        </a>
+
+        <a href="/computadoras" class="menu-item">
+            <span class="menu-icon">▣</span>
+            <span>Computadoras</span>
+        </a>
+
+        <a href="/mantenimientos" class="menu-item">
+            <span class="menu-icon">⚙</span>
+            <span>Mantenimientos</span>
+        </a>
+
+        <a href="/consultas" class="menu-item active">
+            <span class="menu-icon">⌕</span>
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+
+            <a
+                    href="/administracion"
+                    class="menu-item"
+                    id="menuAdministracion">
+
+        <span class="menu-icon">
+            ⚙
+        </span>
+
+                <span>
+            Administración
+        </span>
+
+                <span class="menu-arrow">
+            ▸
+        </span>
+
+            </a>
+
+
+            <div class="submenu">
+
+                <a
+                        href="/usuarios"
+                        class="submenu-item">
+
+            <span>
+                ♙
+            </span>
+
+                    Usuarios
+
+                </a>
+
+
+                <a
+                        href="/funcionarios"
+                        class="submenu-item">
+
+            <span>
+                👷
+            </span>
+
+                    Funcionarios
+
+                </a>
+
+
+                <a
+                        href="/catalogos"
+                        class="submenu-item">
+
+            <span>
+                ⚙
+            </span>
+
+                    Catálogos
+
+                </a>
+
+                <a
+                        href="/auditoria"
+                        class="submenu-item">
+
+            <span>
+                ⌕
+            </span>
+
+                    Auditoría
+
+                </a>
+
+
+                <a
+                        href="/respaldos"
+                        class="submenu-item">
+
+            <span>
+                💾
+            </span>
+
+                    Respaldos
+
+                </a>
+
+
+                <a
+                        href="/configuracion-institucional"
+                        class="submenu-item">
+
+            <span>
+                ⌂
+            </span>
+
+                    Configuración Institucional
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+        <a href="#" id="logout">
+            Cerrar sesión
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- ========================================
+     CONTENIDO PRINCIPAL
+     ======================================== -->
+
+<main class="main-content">
+
+
+    <header class="topbar">
+
+        <div>
+
+            <h1>
+                Consultas
+            </h1>
+
+            <p>
+                Consulte funcionarios,
+                computadoras y mantenimientos.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- ========================================
+         TIPOS DE CONSULTA
+         ======================================== -->
+
+    <section class="panel">
+
+        <div class="panel-header">
+
+            <h2>
+                Tipos de consulta
+            </h2>
+
+        </div>
+
+
+        <div class="consulta-tabs">
+
+            <button
+                    type="button"
+                    class="consulta-tab active"
+                    data-tab="funcionario">
+
+                Funcionario
+
+            </button>
+
+
+            <button
+                    type="button"
+                    class="consulta-tab"
+                    data-tab="computadora">
+
+                Computadora
+
+            </button>
+
+
+            <button
+                    type="button"
+                    class="consulta-tab"
+                    data-tab="mantenimiento">
+
+                Mantenimiento
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ========================================
+         CONSULTA FUNCIONARIO
+         ======================================== -->
+
+    <section
+            id="panel-funcionario"
+            class="consulta-panel active">
+
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Consultar funcionario
+                </h2>
+
+            </div>
+
+
+            <form id="formFuncionario">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="cedula">
+
+                            Cédula del funcionario
+
+                        </label>
+
+
+                        <input
+                                type="text"
+                                id="cedula"
+                                maxlength="10"
+                                placeholder="Ingrese la cédula"
+                                required>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-buttons">
+
+                    <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                        Buscar
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="limpiarFuncionario">
+
+                        Limpiar
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- RESULTADO FUNCIONARIO -->
+
+        <section
+                id="resultadoFuncionario"
+                style="display:none;">
+
+
+            <section class="panel">
+
+                <div class="panel-header">
+
+                    <h2>
+                        Información del funcionario
+                    </h2>
+
+                </div>
+
+
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="generarReporteFuncionario">
+
+                    Generar reporte
+
+                </button>
+
+                <div
+                        id="informacionFuncionario"
+                        class="form-grid">
+
+                </div>
+
+            </section>
+
+
+            <!-- COMPUTADORAS -->
+
+            <section class="panel">
+
+                <div class="panel-header">
+
+                    <h2>
+                        Computadoras asignadas
+                    </h2>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Serie</th>
+
+                            <th>Equipo</th>
+
+                            <th>Marca</th>
+
+                            <th>Modelo</th>
+
+                            <th>Procesador</th>
+
+                            <th>RAM</th>
+
+                            <th>Disco</th>
+
+                            <th>Sistema operativo</th>
+
+                            <th>Ubicación</th>
+
+                            <th>Estado</th>
+
+                            <th>Acciones</th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody
+                                id="tablaComputadoras">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <!-- MANTENIMIENTOS -->
+
+            <section class="panel">
+
+                <div class="panel-header">
+
+                    <h2>
+                        Historial de mantenimientos
+                    </h2>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>Fecha</th>
+
+                            <th>Computadora</th>
+
+                            <th>Tipo</th>
+
+                            <th>Diagnóstico</th>
+
+                            <th>Trabajo realizado</th>
+
+                            <th>Técnico</th>
+
+                            <th>Costo</th>
+
+                            <th>Acciones</th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody
+                                id="tablaMantenimientosFuncionario">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </section>
+
+
+    <!-- ========================================
+         CONSULTA COMPUTADORA
+         ======================================== -->
+
+    <section
+            id="panel-computadora"
+            class="consulta-panel">
+
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Consultar computadora
+                </h2>
+
+            </div>
+
+
+            <form id="formComputadora">
+
+
+                <div class="form-grid-dos">
+
+
+                    <div class="form-group">
+
+                        <label for="nombreEquipo">
+
+                            Nombre del equipo
+
+                        </label>
+
+
+                        <input
+                                type="text"
+                                id="nombreEquipo"
+                                placeholder="Ej. Dell Latitude 5520">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="serieComputadora">
+
+                            Serie
+
+                        </label>
+
+
+                        <input
+                                type="text"
+                                id="serieComputadora"
+                                placeholder="Ej. ABC12345">
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="form-buttons">
+
+                    <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                        Buscar
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="limpiarComputadora">
+
+                        Limpiar
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </section>
+
+
+        <!-- RESULTADO COMPUTADORA -->
+
+        <section
+                id="resultadoComputadora"
+                style="display:none;">
+
+
+            <div
+                    id="listaComputadorasConsulta">
+
+            </div>
+
+
+        </section>
+
+
+    </section>
+
+
+    <!-- ========================================
+         CONSULTA MANTENIMIENTO
+         ======================================== -->
+
+    <section
+            id="panel-mantenimiento"
+            class="consulta-panel">
+
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Consultar mantenimientos
+                </h2>
+
+            </div>
+
+
+            <form id="formMantenimiento">
+
+
+                <div class="form-grid-dos">
+
+
+                    <div class="form-group">
+
+                        <label for="desde">
+                            Desde
+                        </label>
+
+
+                        <input
+                                type="date"
+                                id="desde"
+                                required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="hasta">
+                            Hasta
+                        </label>
+
+
+                        <input
+                                type="date"
+                                id="hasta"
+                                required>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="form-buttons">
+
+                    <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                        Buscar
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="limpiarMantenimiento">
+
+                        Limpiar
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </section>
+
+
+        <!-- RESULTADOS -->
+
+        <section
+                id="resultadoMantenimiento"
+                class="panel"
+                style="display:none;">
+
+
+            <div class="panel-header">
+
+                <h2>
+                    Resultados de mantenimiento
+                </h2>
+
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="generarReporteMantenimiento">
+
+                    Generar reporte
+
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Computadora</th>
+
+                        <th>Tipo</th>
+
+                        <th>Diagnóstico</th>
+
+                        <th>Trabajo realizado</th>
+
+                        <th>Técnico</th>
+
+                        <th>Costo</th>
+
+                        <th>Estado anterior</th>
+
+                        <th>Estado posterior</th>
+
+                        <th>Acciones</th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody
+                            id="tablaMantenimientosConsulta">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+    </section>
+
+
+    <!-- MENSAJES -->
+
+    <section
+            id="mensajeConsulta"
+            class="panel"
+            style="display:none;">
+
+    </section>
+
+
+</main>
+
+
+<script src="/js/api.js"></script>
+<script
+        src="/js/consultas.js">
+</script>
+
+
+</body>
+
+</html>

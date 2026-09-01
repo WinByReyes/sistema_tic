@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Computadoras - Sistema TIC</title>
+
+    <link
+            rel="stylesheet"
+            href="/css/estilos.css"
+    >
+
+</head>
+
+<body>
+
+<!-- ======================================== -->
+<!-- SIDEBAR -->
+<!-- ======================================== -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            TIC
+        </div>
+
+        <div class="logo-text">
+            <h2>SISTEMA TIC</h2>
+            <span>Gestión institucional</span>
+        </div>
+
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="menu-item">
+            <span class="menu-icon">⌂</span>
+            <span>Inicio</span>
+        </a>
+
+        <a href="/usuarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Usuarios</span>
+        </a>
+
+        <a href="/funcionarios" class="menu-item">
+            <span class="menu-icon">♙</span>
+            <span>Funcionarios</span>
+        </a>
+
+        <a href="/computadoras" class="menu-item active">
+            <span class="menu-icon">▣</span>
+            <span>Computadoras</span>
+        </a>
+
+        <a href="/mantenimientos" class="menu-item">
+            <span class="menu-icon">⚙</span>
+            <span>Mantenimientos</span>
+        </a>
+
+        <a href="/consultas" class="menu-item">
+            <span class="menu-icon">⌕</span>
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+
+            <a
+                    href="/administracion"
+                    class="menu-item"
+                    id="menuAdministracion">
+
+        <span class="menu-icon">
+            ⚙
+        </span>
+
+                <span>
+            Administración
+        </span>
+
+                <span class="menu-arrow">
+            ▸
+        </span>
+
+            </a>
+
+
+            <div class="submenu">
+
+                <a
+                        href="/usuarios"
+                        class="submenu-item">
+
+            <span>
+                ♙
+            </span>
+
+                    Usuarios
+
+                </a>
+
+
+                <a
+                        href="/funcionarios"
+                        class="submenu-item">
+
+            <span>
+                👷
+            </span>
+
+                    Funcionarios
+
+                </a>
+
+
+                <a
+                        href="/catalogos"
+                        class="submenu-item">
+
+            <span>
+                ⚙
+            </span>
+
+                    Catálogos
+
+                </a>
+
+                <a
+                        href="/auditoria"
+                        class="submenu-item">
+
+            <span>
+                ⌕
+            </span>
+
+                    Auditoría
+
+                </a>
+
+
+                <a
+                        href="/respaldos"
+                        class="submenu-item">
+
+            <span>
+                💾
+            </span>
+
+                    Respaldos
+
+                </a>
+
+
+                <a
+                        href="/configuracion-institucional"
+                        class="submenu-item">
+
+            <span>
+                ⌂
+            </span>
+
+                    Configuración Institucional
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+
+        <a
+                href="#"
+                id="logout"
+        >
+            Cerrar sesión
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- ======================================== -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ======================================== -->
+
+<main class="main-content">
+
+
+    <!-- ======================================== -->
+    <!-- HEADER -->
+    <!-- ======================================== -->
+
+    <header class="topbar">
+
+        <div>
+
+            <h1>
+                Computadoras
+            </h1>
+
+            <p>
+                Administración de equipos informáticos
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- ======================================== -->
+    <!-- LISTADO -->
+    <!-- ======================================== -->
+
+    <section class="panel">
+
+        <div class="panel-header">
+
+            <h2>
+                Lista de computadoras
+            </h2>
+
+            <button
+                    class="btn btn-primary"
+                    onclick="abrirFormulario()"
+            >
+                + Nueva computadora
+            </button>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>
+                        Funcionario
+                    </th>
+
+                    <th>
+                        Serie
+                    </th>
+
+                    <th>
+                        Nombre equipo
+                    </th>
+
+                    <th>
+                        Marca
+                    </th>
+
+                    <th>
+                        Modelo
+                    </th>
+
+                    <th>
+                        Estado
+                    </th>
+
+                    <th>
+                        Ubicación
+                    </th>
+
+                    <th>
+                        Acciones
+                    </th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody
+                        id="tablaComputadoras"
+                ></tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================== -->
+    <!-- FORMULARIO -->
+    <!-- ======================================== -->
+
+    <section
+            id="formularioComputadora"
+            class="panel formulario-panel"
+            style="display:none;"
+    >
+
+        <div class="panel-header">
+
+            <h2 id="tituloFormulario">
+                Nueva computadora
+            </h2>
+
+        </div>
+
+
+        <form id="computadoraForm">
+
+
+            <!-- ID OCULTO -->
+
+            <input
+                    type="hidden"
+                    id="computadoraId"
+            >
+
+
+            <div class="form-grid">
+
+
+                <!-- ======================================== -->
+                <!-- FUNCIONARIO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="funcionario">
+                        Funcionario
+                    </label>
+
+                    <select id="funcionario">
+
+                        <option value="">
+                            Sin funcionario asignado
+                        </option>
+
+                    </select>
+
+                    <small style="display: block; color: #666; margin-top: 5px;">
+                        * Opción no obligatoria
+                    </small>
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- SERIE -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="serie">
+                        Número de serie
+                    </label>
+
+                    <input
+                            type="text"
+                            id="serie"
+                            maxlength="50"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- NOMBRE EQUIPO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="nombreEquipo">
+                        Nombre del equipo
+                    </label>
+
+                    <input
+                            type="text"
+                            id="nombreEquipo"
+                            maxlength="50"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- PROCEDENCIA -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="procedencia">
+                        Procedencia
+                    </label>
+
+                    <input
+                            type="text"
+                            id="procedencia"
+                            maxlength="100"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- TIPO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="tipo">
+                        Tipo
+                    </label>
+
+                    <input
+                            type="text"
+                            id="tipo"
+                            maxlength="100"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- MARCA -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="marca">
+                        Marca
+                    </label>
+
+                    <select
+                            id="marca"
+                            required>
+
+                        <option value="">
+                            Seleccione la marca
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="marcaOtro"
+                            maxlength="50"
+                            placeholder="Escriba la marca"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- MODELO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="modelo">
+                        Modelo
+                    </label>
+
+                    <input
+                            type="text"
+                            id="modelo"
+                            maxlength="50"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- ESTADO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="estado">
+                        Estado
+                    </label>
+
+                    <select
+                            id="estado"
+                            required>
+
+                        <option value="">
+                            Seleccione el estado
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="estadoOtro"
+                            maxlength="50"
+                            placeholder="Escriba el estado"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+                <!-- ======================================== -->
+                <!-- TIPO PROCESADOR -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="tipoProcesador">
+                        Tipo de procesador
+                    </label>
+
+                    <select
+                            id="tipoProcesador"
+                            required>
+
+                        <option value="">
+                            Seleccione el procesador
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="tipoProcesadorOtro"
+                            maxlength="100"
+                            placeholder="Escriba el tipo de procesador"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+
+
+                <!-- ======================================== -->
+                <!-- GENERACIÓN -->
+                <!-- ======================================== -->
+                <div class="form-group">
+
+                    <label for="generacionProcesador">
+                        Generación del procesador
+                    </label>
+
+                    <select
+                            id="generacionProcesador"
+                            required>
+
+                        <option value="">
+                            Seleccione la generación
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="generacionProcesadorOtro"
+                            maxlength="50"
+                            placeholder="Escriba la generación"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- VELOCIDAD -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="velocidadProcesador">
+                        Velocidad del procesador
+                    </label>
+
+                    <input
+                            type="text"
+                            id="velocidadProcesador"
+                            maxlength="50"
+                            required
+                            placeholder="Ejemplo: 3.20 GHz"
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- RAM -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="memoriaRAM">
+                        Memoria RAM
+                    </label>
+
+                    <select
+                            id="memoriaRAM"
+                            required>
+
+                        <option value="">
+                            Seleccione la RAM
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="memoriaRAMOtro"
+                            maxlength="50"
+                            placeholder="Escriba la memoria RAM"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+                <!-- ======================================== -->
+                <!-- TIPO DISCO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="tipoDisco">
+                        Tipo de disco
+                    </label>
+
+                    <select
+                            id="tipoDisco"
+                            required>
+
+                        <option value="">
+                            Seleccione el tipo de disco
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="tipoDiscoOtro"
+                            maxlength="50"
+                            placeholder="Escriba el tipo de disco"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+                <div class="form-group">
+                    <label for="capacidadDiscoGB">Capacidad de Disco (GB):</label>
+                    <input type="number" id="capacidadDiscoGB" placeholder="Ej. 512" min="0.01" step="0.01" required />
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SISTEMA OPERATIVO -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="sistemaOperativo">
+                        Sistema operativo
+                    </label>
+
+                    <select
+                            id="sistemaOperativo"
+                            required>
+
+                        <option value="">
+                            Seleccione el sistema operativo
+                        </option>
+
+                        <option value="__OTRO__">
+                            Otra opción...
+                        </option>
+
+                    </select>
+
+                    <input
+                            type="text"
+                            id="sistemaOperativoOtro"
+                            maxlength="50"
+                            placeholder="Escriba el sistema operativo"
+                            style="display: none; margin-top: 8px;"
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- OFFICE -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="office">
+                        Office
+                    </label>
+
+                    <input
+                            type="text"
+                            id="office"
+                            maxlength="50"
+                            required
+                    >
+
+                </div>
+
+
+                <!-- ======================================== -->
+                <!-- UBICACIÓN -->
+                <!-- ======================================== -->
+
+                <div class="form-group">
+
+                    <label for="ubicacion">
+                        Ubicación
+                    </label>
+
+                    <input
+                            type="text"
+                            id="ubicacion"
+                            maxlength="50"
+                            required
+                    >
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ======================================== -->
+            <!-- BOTONES -->
+            <!-- ======================================== -->
+
+            <div class="form-buttons">
+
+                <button
+                        type="submit"
+                        class="btn btn-primary"
+                >
+                    Guardar
+                </button>
+
+
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="cerrarFormulario()"
+                >
+                    Cancelar
+                </button>
+
+            </div>
+
+
+        </form>
+
+    </section>
+
+
+</main>
+
+
+<script src="/js/api.js"></script>
+<script src="/js/computadoras.js"></script>
+
+</body>
+
+</html>
