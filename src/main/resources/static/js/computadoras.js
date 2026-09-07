@@ -865,21 +865,13 @@ if (formularioComputadora) {
             // ========================================
 
             if (
-
                 !datos.marca ||
-
                 !datos.tipoProcesador ||
-
                 !datos.generacionProcesador ||
-
                 !datos.memoriaRAM ||
-
                 !datos.tipoDisco ||
-
                 !datos.sistemaOperativo ||
-
                 !datos.estado
-
             ) {
 
                 alert(
@@ -1055,7 +1047,14 @@ async function editarComputadora(id) {
         // SELECCIONAR FUNCIONARIO
         // ====================================
 
-        if (computadora.funcionario) {
+        if (computadora.cedulaFuncionario) {
+
+            document
+                .getElementById("funcionario")
+                .value =
+                computadora.cedulaFuncionario;
+
+        } else if (computadora.funcionario && computadora.funcionario.cedula) {
 
             document
                 .getElementById("funcionario")

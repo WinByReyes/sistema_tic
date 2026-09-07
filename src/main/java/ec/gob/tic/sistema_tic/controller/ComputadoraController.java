@@ -3,7 +3,6 @@ package ec.gob.tic.sistema_tic.controller;
 import ec.gob.tic.sistema_tic.audit.Auditable;
 import ec.gob.tic.sistema_tic.dto.ComputadoraResponseDTO;
 import ec.gob.tic.sistema_tic.dto.ComputadoraRequestDTO;
-import ec.gob.tic.sistema_tic.entity.Computadora;
 import ec.gob.tic.sistema_tic.service.ComputadoraService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +25,7 @@ public class ComputadoraController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping
     public List<ComputadoraResponseDTO> listarTodas() {
-
-        return computadoraService.listarTodas()
-                .stream()
-                .map(ComputadoraResponseDTO::new)
-                .toList();
+        return computadoraService.listarTodas();
     }
 
     // GET /api/computadoras/1
@@ -38,22 +33,15 @@ public class ComputadoraController {
     @GetMapping("/{id}")
     public ResponseEntity<ComputadoraResponseDTO> buscarPorId(
             @PathVariable Long id) {
-        Computadora computadora = computadoraService.buscarPorId(id);
-
-        return ResponseEntity.ok(new ComputadoraResponseDTO(computadora));
+        return ResponseEntity.ok(computadoraService.buscarPorId(id));
     }
 
     // GET /api/computadoras/serie/ABC123
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/serie/{serie}")
     public ResponseEntity<ComputadoraResponseDTO> buscarPorSerie(
             @PathVariable String serie) {
-
-        Computadora computadoraserie = computadoraService.buscarPorSerie(serie);
-
-
-        return ResponseEntity.ok(new ComputadoraResponseDTO(computadoraserie));
+        return ResponseEntity.ok(computadoraService.buscarPorSerie(serie));
     }
 
     @Auditable(
@@ -66,10 +54,7 @@ public class ComputadoraController {
     @PostMapping
     public ResponseEntity<ComputadoraResponseDTO> crear(
            @Valid @RequestBody ComputadoraRequestDTO datos) {
-
-        Computadora nueva = computadoraService.guardar(datos);
-
-        return ResponseEntity.ok(new ComputadoraResponseDTO(nueva));
+        return ResponseEntity.ok(computadoraService.guardar(datos));
     }
 
     @Auditable(
@@ -83,10 +68,7 @@ public class ComputadoraController {
     public ResponseEntity<ComputadoraResponseDTO> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ComputadoraRequestDTO datos) {
-
-        Computadora actualizar = computadoraService.actualizar(id, datos);
-
-       return ResponseEntity.ok(new ComputadoraResponseDTO(actualizar));
+       return ResponseEntity.ok(computadoraService.actualizar(id, datos));
     }
 
     @Auditable(
@@ -99,12 +81,8 @@ public class ComputadoraController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id) {
-
         computadoraService.eliminar(id);
-
         return ResponseEntity.noContent().build();
-
-
     }
 
     @Auditable(
@@ -117,15 +95,8 @@ public class ComputadoraController {
     public ResponseEntity<ComputadoraResponseDTO> asignarFuncionario(
             @PathVariable Long id,
             @RequestParam String cedulaFuncionario) {
-
-        Computadora computadora =
-                computadoraService.asignarFuncionario(
-                        id,
-                        cedulaFuncionario
-                );
-
         return ResponseEntity.ok(
-                new ComputadoraResponseDTO(computadora)
+                computadoraService.asignarFuncionario(id, cedulaFuncionario)
         );
     }
 
@@ -138,13 +109,8 @@ public class ComputadoraController {
     @PatchMapping("/{id}/desasignar")
     public ResponseEntity<ComputadoraResponseDTO> desasignarFuncionario(
             @PathVariable Long id) {
-
-        Computadora computadora =
-                computadoraService.desasignarFuncionario(id);
-
         return ResponseEntity.ok(
-                new ComputadoraResponseDTO(computadora)
+                computadoraService.desasignarFuncionario(id)
         );
     }
-
 }
