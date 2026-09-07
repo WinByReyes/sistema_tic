@@ -1,8 +1,6 @@
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###
 .apt_generated
@@ -14,10 +12,11 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -26,22 +25,19 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
 
-### Backups & SQL Dumps ###
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Backups & SQL Dumps Locales ###
 backups/
 *.sql
 
-### Configuración local ###
-src/main/resources/application-local.properties
-
-### Variables de entorno ###
+### Variables de entorno privadas ###
 .env
 .env.*
 !.env.example
-
-

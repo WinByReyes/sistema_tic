@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Descargar dependencias en capa de cache
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B || true
 
 # Copiar codigo fuente y compilar el archivo JAR
 COPY src ./src
@@ -28,8 +28,8 @@ COPY --from=builder /app/target/*.jar app.jar
 # Puerto por defecto (Render inyecta su propio puerto en $PORT)
 EXPOSE 8080
 
-# Variables de entorno por defecto
+# Variables de entorno por defecto (Optimizadas para plan gratuito de Render - 512MB RAM)
 ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=70.0 -XX:InitialRAMPercentage=35.0 -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
