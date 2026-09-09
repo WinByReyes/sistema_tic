@@ -568,6 +568,35 @@ if (
     userRole !== "ADMIN"
 ) {
 
+    // Para el TECNICO, Administración apunta
+    // directamente al módulo de Catálogos.
+    menuAdministracion.href =
+        "/catalogos";
+
+    // Ocultar el enlace directo "Usuarios".
+    document
+        .querySelectorAll(
+            'a.menu-item[href="/usuarios"]'
+        )
+        .forEach(
+            function(item) {
+                item.style.display =
+                    "none";
+            }
+        );
+
+    // Ocultar la tarjeta de estadística "Usuarios".
+    document
+        .querySelectorAll(
+            'a.stat-card[href="/usuarios"]'
+        )
+        .forEach(
+            function(item) {
+                item.style.display =
+                    "none";
+            }
+        );
+
     document
         .querySelectorAll(
             ".menu-dropdown .submenu .submenu-item"

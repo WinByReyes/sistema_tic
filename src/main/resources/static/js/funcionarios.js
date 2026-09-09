@@ -28,6 +28,10 @@ if (botonLogout) {
 
 const menuAdministracion = document.getElementById("menuAdministracion");
 if (menuAdministracion && rol !== "ADMIN") {
+    menuAdministracion.href = "/catalogos";
+    document.querySelectorAll('a.menu-item[href="/usuarios"]').forEach(item => {
+        item.style.display = "none";
+    });
     document.querySelectorAll(".menu-dropdown .submenu .submenu-item").forEach(item => {
         const href = item.getAttribute("href") || "";
         if (["/usuarios", "/auditoria", "/respaldos", "/configuracion-institucional"].some(p => href.includes(p))) {
