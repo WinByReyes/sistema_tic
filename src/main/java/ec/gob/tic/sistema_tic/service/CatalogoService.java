@@ -37,6 +37,10 @@ public class CatalogoService {
             "UBICACION",
             "ESTADO_COMPUTADORA",
 
+            // FUNCIONARIOS
+            "UNIDAD_ADMINISTRATIVA",
+            "CARGO",
+
             // MANTENIMIENTOS
             "TIPO_MANTENIMIENTO",
             "ESTADO_MANTENIMIENTO",

@@ -110,6 +110,46 @@ body {
     font-size: 14px;
 }
 
+.btn-login {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 18px;
+    margin-top: 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-login:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, var(--color-primary-dark), #1e40af);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-login:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.btn-login:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* =========================================================
    FORMULARIOS Y SECCIONES
    ========================================================= */

@@ -63,6 +63,57 @@ function validarCedulaEcuatoriana(cedula) {
 }
 
 // ========================================
+// CARGAR CATÁLOGOS (UNIDAD / CARGO)
+// ========================================
+async function cargarCatalogo(tipo, selectId, textoInicial) {
+    try {
+        const respuesta = await apiFetch(`/api/catalogos/activos/${tipo}`);
+        if (!respuesta || !respuesta.ok) return;
+
+        const datos = await respuesta.json();
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = `<option value="">${textoInicial}</option>`;
+
+        datos.forEach(item => {
+            const opcion = document.createElement("option");
+            opcion.value = item.nombre;
+            opcion.textContent = item.nombre;
+            select.appendChild(opcion);
+        });
+    } catch (error) {
+        console.error(`Error cargando catálogo ${tipo}:`, error);
+    }
+}
+
+async function cargarCatalogosFormulario() {
+    await Promise.all([
+        cargarCatalogo("UNIDAD_ADMINISTRATIVA", "unidadAdministrativa", "Seleccione la unidad administrativa"),
+        cargarCatalogo("CARGO", "cargo", "Seleccione el cargo")
+    ]);
+}
+
+// Si el valor guardado no está en el catálogo (dato histórico), se agrega
+// como opción para no perderlo al editar.
+function seleccionarValorOAgregar(selectId, valor) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    if (!valor) {
+        select.value = "";
+        return;
+    }
+    const existe = [...select.options].some(op => op.value === valor);
+    if (!existe) {
+        const opcion = document.createElement("option");
+        opcion.value = valor;
+        opcion.textContent = valor;
+        select.appendChild(opcion);
+    }
+    select.value = valor;
+}
+
+// ========================================
 // CARGAR FUNCIONARIOS
 // ========================================
 async function cargarFuncionarios(url = "/api/funcionarios") {
@@ -264,8 +315,8 @@ async function editarFuncionario(id) {
 
         document.getElementById("nombres").value = funcionario.nombres || funcionario.nombrePila || "";
         document.getElementById("apellidos").value = funcionario.apellidos || "";
-        document.getElementById("unidadAdministrativa").value = funcionario.unidadAdministrativa || "";
-        document.getElementById("cargo").value = funcionario.cargo || "";
+        seleccionarValorOAgregar("unidadAdministrativa", funcionario.unidadAdministrativa || "");
+        seleccionarValorOAgregar("cargo", funcionario.cargo || "");
         document.getElementById("estado").value = funcionario.estado || "ACTIVO";
         document.getElementById("codigoBiometrico").value = funcionario.codigoBiometrico || "";
 
@@ -316,6 +367,7 @@ async function eliminarFuncionario(id) {
 // INICIALIZACIÓN
 // ========================================
 async function iniciarPagina() {
+    await cargarCatalogosFormulario();
     await cargarFuncionarios();
 
     const idEdicion = new URLSearchParams(window.location.search).get("editar");
