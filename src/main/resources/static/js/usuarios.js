@@ -1,536 +1,299 @@
 let modoEdicion = false;
-
+let listaUsuariosGlobal = [];
 
 // ================================
-// OBTENER JWT
+// JWT Y SESIÓN
 // ================================
 
 const token = localStorage.getItem("token");
-
-
-// ================================
-// VERIFICAR SESIÓN
-// ================================
+const rol = localStorage.getItem("rol");
 
 if (!token) {
-
     window.location.href = "/login";
-
 }
 
-
-// ================================
-// CERRAR SESIÓN
-// ================================
-
 function cerrarSesion() {
-
     localStorage.removeItem("token");
     localStorage.removeItem("rol");
     localStorage.removeItem("usuario");
     localStorage.removeItem("nombre");
-
+    localStorage.removeItem("idUsuario");
     window.location.href = "/login";
-
 }
 
-
-const botonLogout =
-    document.getElementById("logout");
-
-
+const botonLogout = document.getElementById("logout");
 if (botonLogout) {
-
-    botonLogout.addEventListener(
-        "click",
-        function(event) {
-
-            event.preventDefault();
-
-            cerrarSesion();
-
-        }
-    );
-
+    botonLogout.addEventListener("click", function(event) {
+        event.preventDefault();
+        cerrarSesion();
+    });
 }
 
+const menuAdministracion = document.getElementById("menuAdministracion");
+if (menuAdministracion && rol !== "ADMIN") {
+    document.querySelectorAll(".menu-dropdown .submenu .submenu-item").forEach(item => {
+        const href = item.getAttribute("href") || "";
+        if (["/usuarios", "/auditoria", "/respaldos", "/configuracion-institucional"].some(p => href.includes(p))) {
+            item.style.display = "none";
+        }
+    });
+}
 
 // ================================
 // CARGAR USUARIOS
 // ================================
 
 async function cargarUsuarios() {
+    const tabla = document.getElementById("tablaUsuarios");
+    tabla.innerHTML = `<tr><td colspan="6" class="sin-datos">Cargando usuarios...</td></tr>`;
 
     try {
+        const respuesta = await apiFetch("/api/usuarios");
 
-        const respuesta =
-            await apiFetch("/api/usuarios");
-
-
-        if (!respuesta) {
-            return;
-        }
-
+        if (!respuesta) return;
 
         if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron obtener los usuarios"
-            );
-
+            throw new Error("No se pudieron obtener los usuarios");
         }
 
-
-        const usuarios =
-            await respuesta.json();
-
-
-        const tabla =
-            document.getElementById(
-                "tablaUsuarios"
-            );
-
-
-        tabla.innerHTML = "";
-
-
-        usuarios.forEach(usuario => {
-
-            const fila =
-                document.createElement("tr");
-
-
-            fila.innerHTML = `
-
-                <td>${usuario.id}</td>
-
-                <td>${usuario.nombre}</td>
-
-                <td>${usuario.usuario}</td>
-
-                <td>${usuario.rol}</td>
-
-                <td>
-                    ${usuario.estado
-                ? "Activo"
-                : "Inactivo"}
-                </td>
-
-                <td>
-
-                    <div class="acciones">
-
-                        <button
-                            class="btn btn-warning"
-                            onclick="editarUsuario(${usuario.id})">
-
-                            Editar
-
-                        </button>
-
-                        <button
-                            class="btn btn-danger"
-                            onclick="eliminarUsuario(${usuario.id})">
-
-                            Eliminar
-
-                        </button>
-
-                    </div>
-
-                </td>
-
-            `;
-
-
-            tabla.appendChild(fila);
-
-        });
-
+        listaUsuariosGlobal = await respuesta.json();
+        renderizarTablaUsuarios(listaUsuariosGlobal);
 
     } catch (error) {
-
         console.error(error);
-
-        alert(
-            "Error al cargar los usuarios"
-        );
-
+        tabla.innerHTML = `<tr><td colspan="6" class="sin-datos text-danger">Error al cargar los usuarios.</td></tr>`;
     }
-
 }
 
+function renderizarTablaUsuarios(usuarios) {
+    const tabla = document.getElementById("tablaUsuarios");
+    tabla.innerHTML = "";
+
+    if (!usuarios || usuarios.length === 0) {
+        tabla.innerHTML = `<tr><td colspan="6" class="sin-datos">No se encontraron usuarios registrados.</td></tr>`;
+        return;
+    }
+
+    usuarios.forEach(usuario => {
+        const fila = document.createElement("tr");
+
+        const estadoBadge = usuario.estado
+            ? `<span class="badge badge-success">Activo</span>`
+            : `<span class="badge badge-danger">Inactivo</span>`;
+
+        const rolBadge = usuario.rol === "ADMIN"
+            ? `<span class="badge badge-warning">ADMIN</span>`
+            : `<span class="badge badge-info">TÉCNICO</span>`;
+
+        fila.innerHTML = `
+            <td><strong>${usuario.id}</strong></td>
+            <td><strong>${escapeHtml(usuario.nombre)}</strong></td>
+            <td>${escapeHtml(usuario.usuario)}</td>
+            <td>${rolBadge}</td>
+            <td>${estadoBadge}</td>
+            <td>
+                <div class="acciones-iconos" style="justify-content: center;">
+                    <button
+                        type="button"
+                        class="btn-icon btn-icon-warning"
+                        title="Editar usuario"
+                        aria-label="Editar usuario"
+                        onclick="editarUsuario(${usuario.id})">
+                        ✏️
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-icon btn-icon-danger"
+                        title="Eliminar usuario"
+                        aria-label="Eliminar usuario"
+                        onclick="eliminarUsuario(${usuario.id})">
+                        🗑️
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tabla.appendChild(fila);
+    });
+}
 
 // ================================
-// ABRIR FORMULARIO
+// FILTRAR EN CLIENTE
+// ================================
+
+const buscarInput = document.getElementById("buscarUsuario");
+if (buscarInput) {
+    buscarInput.addEventListener("input", () => {
+        const query = buscarInput.value.toLowerCase().trim();
+        if (!query) {
+            renderizarTablaUsuarios(listaUsuariosGlobal);
+            return;
+        }
+        const filtrados = listaUsuariosGlobal.filter(u =>
+            (u.nombre && u.nombre.toLowerCase().includes(query)) ||
+            (u.usuario && u.usuario.toLowerCase().includes(query)) ||
+            (u.rol && u.rol.toLowerCase().includes(query))
+        );
+        renderizarTablaUsuarios(filtrados);
+    });
+}
+
+// ================================
+// ABRIR / CERRAR FORMULARIO
 // ================================
 
 function abrirFormulario() {
-
     modoEdicion = false;
+    document.getElementById("usuarioForm").reset();
+    document.getElementById("usuarioId").value = "";
+    document.getElementById("tituloFormulario").textContent = "Nuevo Usuario";
+    document.getElementById("contrasena").required = true;
 
-
-    document.getElementById(
-        "usuarioForm"
-    ).reset();
-
-
-    document.getElementById(
-        "usuarioId"
-    ).value = "";
-
-
-    document.getElementById(
-        "tituloFormulario"
-    ).textContent =
-        "Nuevo usuario";
-
-
-    document.getElementById(
-        "formularioUsuario"
-    ).style.display =
-        "block";
-
+    const panel = document.getElementById("formularioUsuario");
+    panel.style.display = "block";
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => document.getElementById("nombre").focus(), 100);
 }
-
-
-// ================================
-// CERRAR FORMULARIO
-// ================================
 
 function cerrarFormulario() {
-
-    document.getElementById(
-        "formularioUsuario"
-    ).style.display =
-        "none";
-
+    const panel = document.getElementById("formularioUsuario");
+    panel.style.display = "none";
+    document.getElementById("usuarioForm").reset();
 }
-
 
 // ================================
 // GUARDAR USUARIO
 // ================================
 
-document.getElementById("usuarioForm")
-    ?.addEventListener(
-        "submit",
-        async function(event) {
+document.getElementById("usuarioForm")?.addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-            event.preventDefault();
+    const id = document.getElementById("usuarioId").value;
+    const nombre = document.getElementById("nombre").value.trim();
+    const usuario = document.getElementById("usuario").value.trim();
+    const contrasena = document.getElementById("contrasena").value;
+    const rolSeleccionado = document.getElementById("rol").value;
+    const estado = document.getElementById("estado").value === "true";
 
+    const datos = {
+        nombre: nombre,
+        usuario: usuario,
+        rol: rolSeleccionado,
+        estado: estado
+    };
 
-            const id =
-                document.getElementById(
-                    "usuarioId"
-                ).value;
+    if (contrasena) {
+        datos.contrasena = contrasena;
+    }
 
+    try {
+        let respuesta;
 
-            const datos = {
-
-                nombre:
-                document.getElementById(
-                    "nombre"
-                ).value,
-
-                usuario:
-                document.getElementById(
-                    "usuario"
-                ).value,
-
-                contrasena:
-                document.getElementById(
-                    "contrasena"
-                ).value,
-
-                rol:
-                document.getElementById(
-                    "rol"
-                ).value,
-
-                estado:
-                    document.getElementById(
-                        "estado"
-                    ).value === "true"
-
-            };
-
-
-            try {
-
-                let respuesta;
-
-
-                // ================================
-                // CREAR
-                // ================================
-
-                if (!modoEdicion) {
-
-                    respuesta =
-                        await apiFetch(
-                            "/api/usuarios",
-                            {
-
-                                method: "POST",
-
-                                body:
-                                    JSON.stringify(datos)
-
-                            }
-                        );
-
-                }
-
-
-                    // ================================
-                    // ACTUALIZAR
-                // ================================
-
-                else {
-
-                    respuesta =
-                        await apiFetch(
-                            `/api/usuarios/${id}`,
-                            {
-
-                                method: "PUT",
-
-                                body:
-                                    JSON.stringify(datos)
-
-                            }
-                        );
-
-                }
-
-
-                if (!respuesta) {
-                    return;
-                }
-
-
-                if (!respuesta.ok) {
-
-                    const errorMsg = await obtenerMensajeError(respuesta, "No se pudo guardar el usuario");
-                    alert(errorMsg);
-                    return;
-
-                }
-
-
-                alert(
-
-                    modoEdicion
-
-                        ? "Usuario actualizado correctamente"
-
-                        : "Usuario creado correctamente"
-
-                );
-
-
-                cerrarFormulario();
-
-                cargarUsuarios();
-
-            }
-
-
-            catch (error) {
-
-                console.error(error);
-
-                alert(
-                    "Error de conexión con el servidor"
-                );
-
-            }
-
+        if (!modoEdicion) {
+            respuesta = await apiFetch("/api/usuarios", {
+                method: "POST",
+                body: JSON.stringify(datos)
+            });
+        } else {
+            respuesta = await apiFetch(`/api/usuarios/${id}`, {
+                method: "PUT",
+                body: JSON.stringify(datos)
+            });
         }
-    );
 
+        if (!respuesta) return;
+
+        if (!respuesta.ok) {
+            const errorMsg = await obtenerMensajeError(respuesta, "No se pudo guardar el usuario");
+            alert(errorMsg);
+            return;
+        }
+
+        cerrarFormulario();
+        await cargarUsuarios();
+
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión con el servidor");
+    }
+});
 
 // ================================
 // EDITAR USUARIO
 // ================================
 
 async function editarUsuario(id) {
-
     try {
+        const respuesta = await apiFetch(`/api/usuarios/${id}`);
 
-        const respuesta =
-            await apiFetch(
-                `/api/usuarios/${id}`
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
+        if (!respuesta) return;
 
         if (!respuesta.ok) {
-
-            throw new Error(
-                "No se encontró el usuario"
-            );
-
+            throw new Error("No se encontró el usuario");
         }
 
-
-        const usuario =
-            await respuesta.json();
-
-
+        const usuario = await respuesta.json();
         modoEdicion = true;
 
+        document.getElementById("usuarioId").value = usuario.id;
+        document.getElementById("nombre").value = usuario.nombre || "";
+        document.getElementById("usuario").value = usuario.usuario || "";
+        document.getElementById("contrasena").value = "";
+        document.getElementById("contrasena").required = false;
+        document.getElementById("rol").value = usuario.rol || "TECNICO";
+        document.getElementById("estado").value = usuario.estado ? "true" : "false";
 
-        document.getElementById(
-            "usuarioId"
-        ).value =
-            usuario.id;
+        document.getElementById("tituloFormulario").textContent = `Editar Usuario: ${usuario.usuario}`;
 
+        const panel = document.getElementById("formularioUsuario");
+        panel.style.display = "block";
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        setTimeout(() => document.getElementById("nombre").focus(), 100);
 
-        document.getElementById(
-            "nombre"
-        ).value =
-            usuario.nombre;
-
-
-        document.getElementById(
-            "usuario"
-        ).value =
-            usuario.usuario;
-
-
-        document.getElementById(
-            "contrasena"
-        ).value =
-            "";
-
-
-        document.getElementById(
-            "rol"
-        ).value =
-            usuario.rol;
-
-
-        document.getElementById(
-            "estado"
-        ).value =
-            usuario.estado
-                ? "true"
-                : "false";
-
-
-        document.getElementById(
-            "tituloFormulario"
-        ).textContent =
-            "Editar usuario";
-
-
-        document.getElementById(
-            "formularioUsuario"
-        ).style.display =
-            "block";
-
-    }
-
-
-    catch (error) {
-
+    } catch (error) {
         console.error(error);
-
-        alert(
-            "Error al obtener el usuario"
-        );
-
+        alert("Error al obtener el usuario");
     }
-
 }
-
 
 // ================================
 // ELIMINAR USUARIO
 // ================================
 
 async function eliminarUsuario(id) {
-
-    const confirmar =
-        confirm(
-            "¿Está seguro de eliminar este usuario?"
-        );
-
-
-    if (!confirmar) {
-
+    if (!confirm("¿Está seguro de eliminar este usuario?")) {
         return;
-
     }
 
-
     try {
+        const respuesta = await apiFetch(`/api/usuarios/${id}`, {
+            method: "DELETE"
+        });
 
-        const respuesta =
-            await apiFetch(
-                `/api/usuarios/${id}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
+        if (!respuesta) return;
 
         if (!respuesta.ok) {
-
             const errorMsg = await obtenerMensajeError(respuesta, "No se pudo eliminar el usuario");
             alert(errorMsg);
             return;
-
         }
 
+        await cargarUsuarios();
 
-        alert(
-            "Usuario eliminado correctamente"
-        );
-
-
-        cargarUsuarios();
-
-    }
-
-
-    catch (error) {
-
+    } catch (error) {
         console.error(error);
-
-        alert(
-            "Error al eliminar el usuario"
-        );
-
+        alert("Error al eliminar el usuario");
     }
-
 }
-const rol =
-    localStorage.getItem("rol");
 
-const menuAdministracion =
-    document.getElementById(
-        "menuAdministracion"
-    );
-
-if (
-    menuAdministracion &&
-    rol !== "ADMIN"
-) {
-
-    menuAdministracion.style.display =
-        "none";
+function escapeHtml(text) {
+    if (text === null || text === undefined) return "";
+    return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 // ================================

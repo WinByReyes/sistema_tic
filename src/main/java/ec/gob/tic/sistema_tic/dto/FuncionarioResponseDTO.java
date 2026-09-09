@@ -1,11 +1,16 @@
 package ec.gob.tic.sistema_tic.dto;
 
+import ec.gob.tic.sistema_tic.entity.Funcionario;
+
 import java.time.LocalDateTime;
 
 public class FuncionarioResponseDTO {
 
     private Long id;
     private String cedula;
+    private String nombres;
+    private String apellidos;
+    private String nombreCompleto;
     private String nombrePila;
     private String unidadAdministrativa;
     private String cargo;
@@ -14,6 +19,22 @@ public class FuncionarioResponseDTO {
     private LocalDateTime fechaCreacion;
 
     public FuncionarioResponseDTO() {
+    }
+
+    public FuncionarioResponseDTO(Funcionario funcionario) {
+        if (funcionario != null) {
+            this.id = funcionario.getId();
+            this.cedula = funcionario.getCedula();
+            this.nombres = funcionario.getNombres();
+            this.apellidos = funcionario.getApellidos();
+            this.nombreCompleto = funcionario.getNombreCompleto();
+            this.nombrePila = funcionario.getNombrePila();
+            this.unidadAdministrativa = funcionario.getUnidadAdministrativa();
+            this.cargo = funcionario.getCargo();
+            this.estado = funcionario.getEstado();
+            this.codigoBiometrico = funcionario.getCodigoBiometrico();
+            this.fechaCreacion = funcionario.getFechaCreacion();
+        }
     }
 
     public Long getId() {
@@ -30,6 +51,30 @@ public class FuncionarioResponseDTO {
 
     public void setCedula(String cedula) {
         this.cedula = cedula;
+    }
+
+    public String getNombres() {
+        return nombres;
+    }
+
+    public void setNombres(String nombres) {
+        this.nombres = nombres;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public String getNombreCompleto() {
+        return nombreCompleto;
+    }
+
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombreCompleto = nombreCompleto;
     }
 
     public String getNombrePila() {

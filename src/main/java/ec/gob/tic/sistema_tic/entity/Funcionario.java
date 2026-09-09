@@ -21,9 +21,17 @@ public class Funcionario {
     @Column(nullable = false, unique = true, length = 10)
     private String cedula;
 
-    @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 150, message = "El nombre no puede superar los 150 caracteres")
-    @Column(name = "nombre_pila", nullable = false, length = 150)
+    @NotBlank(message = "Los nombres son obligatorios")
+    @Size(max = 150, message = "Los nombres no pueden superar los 150 caracteres")
+    @Column(name = "nombres", nullable = false, length = 150)
+    private String nombres;
+
+    @NotBlank(message = "Los apellidos son obligatorios")
+    @Size(max = 150, message = "Los apellidos no pueden superar los 150 caracteres")
+    @Column(name = "apellidos", nullable = false, length = 150)
+    private String apellidos;
+
+    @Column(name = "nombre_pila", length = 150)
     private String nombrePila;
 
     @NotBlank(message = "La unidad administrativa es obligatoria")
@@ -49,8 +57,7 @@ public class Funcionario {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
-    public Funcionario()
-    {
+    public Funcionario() {
         this.fechaCreacion = LocalDateTime.now();
     }
 
@@ -70,12 +77,52 @@ public class Funcionario {
         this.id = id;
     }
 
+    public String getNombres() {
+        return nombres;
+    }
+
+    public void setNombres(String nombres) {
+        this.nombres = nombres;
+        actualizarNombrePila();
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+        actualizarNombrePila();
+    }
+
     public String getNombrePila() {
-        return nombrePila;
+        if (nombrePila != null && !nombrePila.isBlank()) {
+            return nombrePila;
+        }
+        return getNombreCompleto();
     }
 
     public void setNombrePila(String nombrePila) {
         this.nombrePila = nombrePila;
+    }
+
+    public String getNombreCompleto() {
+        StringBuilder sb = new StringBuilder();
+        if (nombres != null && !nombres.isBlank()) {
+            sb.append(nombres.trim());
+        }
+        if (apellidos != null && !apellidos.isBlank()) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(apellidos.trim());
+        }
+        if (sb.length() == 0 && nombrePila != null) {
+            return nombrePila.trim();
+        }
+        return sb.toString();
+    }
+
+    private void actualizarNombrePila() {
+        this.nombrePila = getNombreCompleto();
     }
 
     public String getUnidadAdministrativa() {
@@ -118,4 +165,3 @@ public class Funcionario {
         this.fechaCreacion = fechaCreacion;
     }
 }
-

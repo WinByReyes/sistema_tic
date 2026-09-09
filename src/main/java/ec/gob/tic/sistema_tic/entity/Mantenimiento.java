@@ -14,7 +14,6 @@ public class Mantenimiento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     // ==========================================
     // COMPUTADORA
     // ==========================================
@@ -26,7 +25,6 @@ public class Mantenimiento {
     )
     @NotNull(message = "La computadora es obligatoria")
     private Computadora computadora;
-
 
     // ==========================================
     // USUARIO QUE REGISTRA
@@ -40,33 +38,19 @@ public class Mantenimiento {
     @NotNull(message = "El usuario que registra es obligatorio")
     private Usuario usuario;
 
-
     // ==========================================
     // RESPONSABLE DEL MANTENIMIENTO
     // ==========================================
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "responsable_id",
-            nullable = true
-    )
-    private Responsable responsable;
-
-
-    public String getResponsableManual() {
-        return responsableManual;
-    }
-
-    public void setResponsableManual(String responsableManual) {
-        this.responsableManual = responsableManual;
-    }
-
     @Column(
-            name = "responsable_manual",
+            name = "responsable",
+            nullable = false,
             length = 150
     )
-    private String responsableManual;
-
+    @NotBlank(
+            message = "El responsable del mantenimiento es obligatorio"
+    )
+    private String responsable;
 
     // ==========================================
     // FECHAS
@@ -78,7 +62,6 @@ public class Mantenimiento {
     )
     @NotNull
     private LocalDateTime fechaHora;
-
 
     // ==========================================
     // TIPO DE MANTENIMIENTO
@@ -94,7 +77,6 @@ public class Mantenimiento {
     )
     private String tipoMantenimiento;
 
-
     // ==========================================
     // ESTADO DEL MANTENIMIENTO
     // ==========================================
@@ -109,7 +91,6 @@ public class Mantenimiento {
     )
     private String estadoMantenimiento;
 
-
     // ==========================================
     // INFORMACIÓN
     // ==========================================
@@ -123,7 +104,6 @@ public class Mantenimiento {
     )
     private String diagnostico;
 
-
     @Column(
             name = "trabajo_realizado",
             nullable = false,
@@ -133,7 +113,6 @@ public class Mantenimiento {
             message = "El trabajo realizado es obligatorio"
     )
     private String trabajoRealizado;
-
 
     @Column(
             nullable = false,
@@ -149,20 +128,6 @@ public class Mantenimiento {
     )
     private BigDecimal costo;
 
-
-    // ==========================================
-    // ESTADO DE LA COMPUTADORA ANTES
-    // ==========================================
-
-    @Column(
-            name = "estado_anterior",
-            nullable = false,
-            length = 50
-    )
-    @NotBlank
-    private String estadoAnterior;
-
-
     // ==========================================
     // ESTADO DE LA COMPUTADORA DESPUÉS
     // ==========================================
@@ -172,9 +137,10 @@ public class Mantenimiento {
             nullable = false,
             length = 50
     )
-    @NotBlank
+    @NotBlank(
+            message = "El estado posterior es obligatorio"
+    )
     private String estadoPosterior;
-
 
     // ==========================================
     // OBSERVACIONES
@@ -184,9 +150,10 @@ public class Mantenimiento {
             nullable = false,
             columnDefinition = "TEXT"
     )
-    @NotBlank
+    @NotBlank(
+            message = "Las observaciones son obligatorias"
+    )
     private String observaciones;
-
 
     // ==========================================
     // FECHA DE CREACIÓN
@@ -199,7 +166,6 @@ public class Mantenimiento {
     @NotNull
     private LocalDateTime fechaCreacion;
 
-
     // ==========================================
     // FECHA DEL MANTENIMIENTO
     // ==========================================
@@ -211,20 +177,14 @@ public class Mantenimiento {
     @NotNull
     private LocalDateTime fechaMantenimiento;
 
-
     // ==========================================
     // CONSTRUCTOR
     // ==========================================
 
     public Mantenimiento() {
-
-        this.fechaHora =
-                LocalDateTime.now();
-
-        this.fechaCreacion =
-                LocalDateTime.now();
+        this.fechaHora = LocalDateTime.now();
+        this.fechaCreacion = LocalDateTime.now();
     }
-
 
     // ==========================================
     // GETTERS Y SETTERS
@@ -238,171 +198,107 @@ public class Mantenimiento {
         this.id = id;
     }
 
-
     public Computadora getComputadora() {
         return computadora;
     }
 
-    public void setComputadora(
-            Computadora computadora) {
-
-        this.computadora =
-                computadora;
+    public void setComputadora(Computadora computadora) {
+        this.computadora = computadora;
     }
-
 
     public Usuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(
-            Usuario usuario) {
-
-        this.usuario =
-                usuario;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
-
-
-    public Responsable getResponsable() {
-        return responsable;
-    }
-
-    public void setResponsable(
-            Responsable responsable) {
-
-        this.responsable =
-                responsable;
-    }
-
 
     public LocalDateTime getFechaHora() {
         return fechaHora;
     }
 
-    public void setFechaHora(
-            LocalDateTime fechaHora) {
-
-        this.fechaHora =
-                fechaHora;
+    public void setFechaHora(LocalDateTime fechaHora) {
+        this.fechaHora = fechaHora;
     }
-
 
     public String getTipoMantenimiento() {
         return tipoMantenimiento;
     }
 
-    public void setTipoMantenimiento(
-            String tipoMantenimiento) {
-
-        this.tipoMantenimiento =
-                tipoMantenimiento;
+    public void setTipoMantenimiento(String tipoMantenimiento) {
+        this.tipoMantenimiento = tipoMantenimiento;
     }
-
 
     public String getEstadoMantenimiento() {
         return estadoMantenimiento;
     }
 
-    public void setEstadoMantenimiento(
-            String estadoMantenimiento) {
-
-        this.estadoMantenimiento =
-                estadoMantenimiento;
+    public void setEstadoMantenimiento(String estadoMantenimiento) {
+        this.estadoMantenimiento = estadoMantenimiento;
     }
-
 
     public String getDiagnostico() {
         return diagnostico;
     }
 
-    public void setDiagnostico(
-            String diagnostico) {
-
-        this.diagnostico =
-                diagnostico;
+    public void setDiagnostico(String diagnostico) {
+        this.diagnostico = diagnostico;
     }
-
 
     public String getTrabajoRealizado() {
         return trabajoRealizado;
     }
 
-    public void setTrabajoRealizado(
-            String trabajoRealizado) {
-
-        this.trabajoRealizado =
-                trabajoRealizado;
+    public void setTrabajoRealizado(String trabajoRealizado) {
+        this.trabajoRealizado = trabajoRealizado;
     }
-
 
     public BigDecimal getCosto() {
         return costo;
     }
 
-    public void setCosto(
-            BigDecimal costo) {
-
-        this.costo =
-                costo;
+    public void setCosto(BigDecimal costo) {
+        this.costo = costo;
     }
 
-
-    public String getEstadoAnterior() {
-        return estadoAnterior;
+    public String getResponsable() {
+        return responsable;
     }
 
-    public void setEstadoAnterior(
-            String estadoAnterior) {
-
-        this.estadoAnterior =
-                estadoAnterior;
+    public void setResponsable(String responsable) {
+        this.responsable = responsable;
     }
-
 
     public String getEstadoPosterior() {
         return estadoPosterior;
     }
 
-    public void setEstadoPosterior(
-            String estadoPosterior) {
-
-        this.estadoPosterior =
-                estadoPosterior;
+    public void setEstadoPosterior(String estadoPosterior) {
+        this.estadoPosterior = estadoPosterior;
     }
-
 
     public String getObservaciones() {
         return observaciones;
     }
 
-    public void setObservaciones(
-            String observaciones) {
-
-        this.observaciones =
-                observaciones;
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
     }
-
 
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(
-            LocalDateTime fechaCreacion) {
-
-        this.fechaCreacion =
-                fechaCreacion;
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
-
 
     public LocalDateTime getFechaMantenimiento() {
         return fechaMantenimiento;
     }
 
-    public void setFechaMantenimiento(
-            LocalDateTime fechaMantenimiento) {
-
-        this.fechaMantenimiento =
-                fechaMantenimiento;
+    public void setFechaMantenimiento(LocalDateTime fechaMantenimiento) {
+        this.fechaMantenimiento = fechaMantenimiento;
     }
 }

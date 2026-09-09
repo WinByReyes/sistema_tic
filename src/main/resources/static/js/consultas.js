@@ -1,2041 +1,663 @@
 const token = localStorage.getItem("token");
 
-
 // ========================================
 // VERIFICAR SESIÓN
 // ========================================
 
 if (!token) {
-
     window.location.href = "/login";
-
 }
-
 
 // ========================================
 // CERRAR SESIÓN
 // ========================================
 
-const logout =
-    document.getElementById("logout");
-
-
+const logout = document.getElementById("logout");
 if (logout) {
-
-    logout.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-
-            localStorage.removeItem("token");
-            localStorage.removeItem("rol");
-            localStorage.removeItem("usuario");
-            localStorage.removeItem("nombre");
-
-            window.location.href =
-                "/login";
-
-        }
-    );
-
+    logout.addEventListener("click", event => {
+        event.preventDefault();
+        localStorage.removeItem("token");
+        localStorage.removeItem("rol");
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("nombre");
+        localStorage.removeItem("idUsuario");
+        window.location.href = "/login";
+    });
 }
-
 
 // ========================================
 // PESTAÑAS
 // ========================================
 
-document
-    .querySelectorAll(".consulta-tab")
-    .forEach(tab => {
+document.querySelectorAll(".consulta-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        document.querySelectorAll(".consulta-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".consulta-panel").forEach(panel => panel.classList.remove("active"));
 
-        tab.addEventListener(
-            "click",
-            () => {
-
-                document
-                    .querySelectorAll(".consulta-tab")
-                    .forEach(t =>
-                        t.classList.remove("active")
-                    );
-
-
-                document
-                    .querySelectorAll(".consulta-panel")
-                    .forEach(panel =>
-                        panel.classList.remove("active")
-                    );
-
-
-                tab.classList.add("active");
-
-
-                document
-                    .getElementById(
-                        `panel-${tab.dataset.tab}`
-                    )
-                    .classList.add("active");
-
-
-                ocultarMensaje();
-
-            }
-        );
-
+        tab.classList.add("active");
+        document.getElementById(`panel-${tab.dataset.tab}`).classList.add("active");
+        ocultarMensaje();
     });
+});
 
+// ========================================
+// VALIDACIÓN CÉDULA ECUATORIANA
+// ========================================
+
+function esCedulaValida(cedula) {
+    if (!cedula || cedula.length !== 10 || !/^\d{10}$/.test(cedula)) return false;
+    const prov = parseInt(cedula.substring(0, 2), 10);
+    if (!((prov >= 1 && prov <= 24) || prov === 30)) return false;
+    const tercerDigito = parseInt(cedula.charAt(2), 10);
+    if (tercerDigito < 0 || tercerDigito > 6) return false;
+
+    const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+    let suma = 0;
+    for (let i = 0; i < 9; i++) {
+        let val = parseInt(cedula.charAt(i), 10) * coeficientes[i];
+        if (val >= 10) val -= 9;
+        suma += val;
+    }
+    const digitoVerificador = parseInt(cedula.charAt(9), 10);
+    const decenaSuperior = Math.ceil(suma / 10.0) * 10;
+    let resultado = decenaSuperior - suma;
+    if (resultado === 10) resultado = 0;
+    return resultado === digitoVerificador;
+}
 
 // ========================================
 // CONSULTA FUNCIONARIO
 // ========================================
 
-document
-    .getElementById("formFuncionario")
-    ?.addEventListener(
-        "submit",
-        async event => {
+document.getElementById("formFuncionario")?.addEventListener("submit", async event => {
+    event.preventDefault();
 
-            event.preventDefault();
+    const cedula = document.getElementById("cedula").value.trim();
 
+    if (!cedula || !/^\d{10}$/.test(cedula)) {
+        mostrarMensaje("La cédula debe contener exactamente 10 dígitos numéricos.", true);
+        return;
+    }
 
-            const cedula =
-                document
-                    .getElementById("cedula")
-                    .value
-                    .trim();
+    try {
+        mostrarMensaje("Consultando información del funcionario...");
+        const respuesta = await apiFetch(`/api/consultas/funcionario/${encodeURIComponent(cedula)}`);
 
+        if (!respuesta) return;
 
-            if (!/^\d{10}$/.test(cedula)) {
-
-                mostrarMensaje(
-                    "La cédula debe contener exactamente 10 números.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                mostrarMensaje(
-                    "Consultando información..."
-                );
-
-
-                const respuesta =
-                    await apiFetch(
-                        `/api/consultas/funcionario/${encodeURIComponent(cedula)}`
-                    );
-
-
-                if (!respuesta) {
-
-                    return;
-
-                }
-
-
-                if (!respuesta.ok) {
-
-                    await mostrarErrorRespuesta(
-                        respuesta,
-                        "No se encontró el funcionario."
-                    );
-
-
-                    ocultarResultado(
-                        "resultadoFuncionario"
-                    );
-
-
-                    return;
-
-                }
-
-
-                const datos =
-                    await respuesta.json();
-
-
-                mostrarFuncionario(
-                    datos.funcionario
-                );
-
-
-                mostrarComputadoras(
-                    datos.computadoras
-                );
-
-
-                mostrarMantenimientosFuncionario(
-                    datos.mantenimientos
-                );
-
-
-                document
-                    .getElementById(
-                        "resultadoFuncionario"
-                    )
-                    .style.display =
-                    "block";
-
-
-                guardarConsultaReciente(
-                    datos.funcionario
-                );
-
-
-                ocultarMensaje();
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                ocultarResultado(
-                    "resultadoFuncionario"
-                );
-
-
-                mostrarMensaje(
-                    "Error de conexión con el servidor.",
-                    true
-                );
-
-            }
-
+        if (!respuesta.ok) {
+            await mostrarErrorRespuesta(respuesta, "No se encontró el funcionario.");
+            ocultarResultado("resultadoFuncionario");
+            return;
         }
-    );
 
+        const datos = await respuesta.json();
+
+        mostrarFuncionario(datos.funcionario);
+        mostrarComputadoras(datos.computadoras);
+        mostrarMantenimientosFuncionario(datos.mantenimientos);
+
+        document.getElementById("resultadoFuncionario").style.display = "block";
+        guardarConsultaReciente(datos.funcionario);
+        ocultarMensaje();
+
+    } catch (error) {
+        console.error(error);
+        ocultarResultado("resultadoFuncionario");
+        mostrarMensaje("Error de conexión con el servidor.", true);
+    }
+});
 
 // ========================================
 // MOSTRAR FUNCIONARIO
 // ========================================
 
-function mostrarFuncionario(
-    funcionario
-) {
+function mostrarFuncionario(funcionario) {
+    const nombresCompletos = funcionario.nombres && funcionario.apellidos
+        ? `${funcionario.nombres} ${funcionario.apellidos}`
+        : (funcionario.nombrePila || "N/A");
 
-    document
-        .getElementById(
-            "informacionFuncionario"
-        )
-        .innerHTML = `
-
-            <div class="form-buttons" style="grid-column: 1 / -1;">
-
-                ${botonEditar("funcionario", funcionario.id)}
-
-            </div>
-
-            <div class="form-group">
-
-                <label>ID</label>
-
-                <span>
-                    ${esc(funcionario.id)}
-                </span>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Cédula</label>
-
-                <span>
-                    ${esc(funcionario.cedula)}
-                </span>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Nombre</label>
-
-                <span>
-                    ${esc(funcionario.nombrePila)}
-                </span>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Unidad administrativa</label>
-
-                <span>
-                    ${esc(
-        funcionario.unidadAdministrativa
-    )}
-                </span>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Cargo</label>
-
-                <span>
-                    ${esc(funcionario.cargo)}
-                </span>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Estado</label>
-
-                <span>
+    document.getElementById("informacionFuncionario").innerHTML = `
+        <div class="form-group">
+            <label>Cédula</label>
+            <span style="font-weight: 700; color: #1e293b; font-size: 14px;">${esc(funcionario.cedula)}</span>
+        </div>
+        <div class="form-group">
+            <label>Nombres y Apellidos</label>
+            <span style="font-weight: 700; color: #2563eb; font-size: 14px;">${esc(nombresCompletos)}</span>
+        </div>
+        <div class="form-group">
+            <label>Unidad Administrativa</label>
+            <span>${esc(funcionario.unidadAdministrativa)}</span>
+        </div>
+        <div class="form-group">
+            <label>Cargo</label>
+            <span>${esc(funcionario.cargo)}</span>
+        </div>
+        <div class="form-group">
+            <label>Estado</label>
+            <div>
+                <span class="badge ${funcionario.estado === 'Activo' || funcionario.estado === 'ACTIVO' ? 'badge-success' : 'badge-danger'}">
                     ${esc(funcionario.estado)}
                 </span>
-
             </div>
-
-
-            <div class="form-group">
-
-                <label>Código biométrico</label>
-
-                <span>
-                    ${esc(
-        funcionario.codigoBiometrico
-    )}
-                </span>
-
-            </div>
-
-        `;
-
+        </div>
+        <div class="form-group">
+            <label>Código Biométrico</label>
+            <span>${esc(funcionario.codigoBiometrico)}</span>
+        </div>
+        <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <a href="/funcionarios?editar=${encodeURIComponent(funcionario.id)}" class="btn btn-warning btn-sm">
+                ✏️ Editar Funcionario
+            </a>
+        </div>
+    `;
 }
 
-
 // ========================================
-// COMPUTADORAS DEL FUNCIONARIO
+// COMPUTADORAS DEL FUNCIONARIO (1..N)
 // ========================================
 
-function mostrarComputadoras(
-    computadoras
-) {
-
-    const tabla =
-        document.getElementById(
-            "tablaComputadoras"
-        );
-
-
+function mostrarComputadoras(computadoras) {
+    const tabla = document.getElementById("tablaComputadoras");
     tabla.innerHTML = "";
 
-
-    if (
-        !computadoras ||
-        computadoras.length === 0
-    ) {
-
+    if (!computadoras || computadoras.length === 0) {
         tabla.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="12"
-                    class="sin-datos">
-
-                    Este funcionario
-                    no tiene computadoras
-                    asignadas actualmente.
-
+                <td colspan="11" class="sin-datos">
+                    Este funcionario no tiene computadoras asignadas actualmente.
                 </td>
-
             </tr>
-
         `;
-
         return;
-
     }
 
-
-    computadoras.forEach(
-        computadora => {
-
-            tabla.innerHTML += `
-
-                <tr>
-
-                    <td>
-                        ${esc(computadora.id)}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.serie)}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.nombreEquipo)}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.marca)}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.modelo)}
-                    </td>
-
-                    <td>
-                        ${esc(
-                computadora.tipoProcesador
-            )}
-                        ${esc(
-                computadora.generacionProcesador
-            )}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.memoriaRAM)}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.tipoDisco)}
-                        -
-                        ${esc(
-                computadora.capacidadDiscoGB
-            )}
-                        GB
-                    </td>
-
-                    <td>
-                        ${esc(
-                computadora.sistemaOperativo
-            )}
-                    </td>
-
-                    <td>
-                        ${esc(computadora.ubicacion)}
-                    </td>
-
-                    <td>
-                        ${esc(
-                computadora.estado ||
-                "N/A"
-            )}
-                    </td>
-
-                    <td>
-                        ${botonEditar("computadora", computadora.id)}
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-    );
-
+    computadoras.forEach(pc => {
+        tabla.innerHTML += `
+            <tr>
+                <td><strong>${pc.id}</strong></td>
+                <td><span style="font-weight: 700; color: #1e293b;">${esc(pc.serie)}</span></td>
+                <td>${esc(pc.nombreEquipo)}</td>
+                <td>${esc(pc.tipo)} / ${esc(pc.marca)}</td>
+                <td>${esc(pc.modelo)}</td>
+                <td>${esc(pc.tipoProcesador)} ${esc(pc.generacionProcesador || "")}</td>
+                <td>${esc(pc.memoriaRAM)} / ${esc(pc.tipoDisco)} ${esc(pc.capacidadDiscoGB)}GB</td>
+                <td>${esc(pc.sistemaOperativo)}</td>
+                <td>${esc(pc.ubicacion)}</td>
+                <td><span class="badge badge-info">${esc(pc.estado || "N/A")}</span></td>
+                <td class="text-center">
+                    <div class="acciones-iconos" style="justify-content: center;">
+                        <a href="/computadoras?editar=${encodeURIComponent(pc.id)}" class="btn-icon btn-icon-warning" title="Editar Computadora">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
 }
-
 
 // ========================================
 // MANTENIMIENTOS DEL FUNCIONARIO
 // ========================================
 
-function mostrarMantenimientosFuncionario(
-    mantenimientos
-) {
-
-    const tabla =
-        document.getElementById(
-            "tablaMantenimientosFuncionario"
-        );
-
-
+function mostrarMantenimientosFuncionario(mantenimientos) {
+    const tabla = document.getElementById("tablaMantenimientosFuncionario");
     tabla.innerHTML = "";
 
-
-    if (
-        !mantenimientos ||
-        mantenimientos.length === 0
-    ) {
-
+    if (!mantenimientos || mantenimientos.length === 0) {
         tabla.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="8"
-                    class="sin-datos">
-
-                    No existen mantenimientos
-                    registrados para sus
-                    computadoras.
-
+                <td colspan="9" class="sin-datos">
+                    No existen mantenimientos registrados para sus computadoras.
                 </td>
-
             </tr>
-
         `;
-
         return;
-
     }
 
-
-    mantenimientos.forEach(
-        mantenimiento => {
-
-            tabla.innerHTML += `
-
-                <tr>
-
-                    <td>
-                        ${formatearFecha(
-                mantenimiento.fechaMantenimiento
-            )}
-                    </td>
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.nombreEquipo
-            )}
-
-                        <br>
-
-                        <small>
-
-                            Serie:
-                            ${esc(
-                mantenimiento.serieComputadora
-            )}
-
-                        </small>
-
-                    </td>
-
-                    <td>
-                        ${esc(
-                mantenimiento.tipoMantenimiento
-            )}
-                    </td>
-
-                    <td>
-                        ${esc(
-                mantenimiento.diagnostico
-            )}
-                    </td>
-
-                    <td>
-                        ${esc(
-                mantenimiento.trabajoRealizado
-            )}
-                    </td>
-
-                    <td>
-                        ${esc(
-                mantenimiento.nombreUsuario
-            )}
-                    </td>
-
-                    <td>
-                        $${esc(
-                mantenimiento.costo
-            )}
-                    </td>
-
-                    <td>
-                        ${botonEditar("mantenimiento", mantenimiento.id)}
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-    );
-
+    mantenimientos.forEach(m => {
+        tabla.innerHTML += `
+            <tr>
+                <td>${formatearFecha(m.fechaMantenimiento)}</td>
+                <td>
+                    <strong>${esc(m.nombreEquipo)}</strong>
+                    <br><small style="color: #64748b;">Serie: ${esc(m.serieComputadora)}</small>
+                </td>
+                <td>${esc(m.tipoMantenimiento)}</td>
+                <td>${esc(m.diagnostico)}</td>
+                <td>${esc(m.trabajoRealizado)}</td>
+                <td>${esc(m.nombreResponsable || m.nombreUsuario || "N/A")}</td>
+                <td><strong>$${esc(m.costo || 0)}</strong></td>
+                <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
+                <td class="text-center">
+                    <div class="acciones-iconos" style="justify-content: center;">
+                        <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar Mantenimiento">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
 }
-
 
 // ========================================
 // CONSULTA COMPUTADORA
 // ========================================
 
-document
-    .getElementById("formComputadora")
-    ?.addEventListener(
-        "submit",
-        async event => {
+document.getElementById("formComputadora")?.addEventListener("submit", async event => {
+    event.preventDefault();
 
-            event.preventDefault();
+    const serie = document.getElementById("serieComputadora").value.trim();
+    const cedula = document.getElementById("cedulaComputadora")?.value.trim() || "";
+    const nombre = document.getElementById("nombreEquipo").value.trim();
 
+    if (!serie && !cedula && !nombre) {
+        mostrarMensaje("Ingrese al menos un criterio de búsqueda (Serie, Cédula o Nombre).", true);
+        return;
+    }
 
-            const nombre =
-                document
-                    .getElementById("nombreEquipo")
-                    .value
-                    .trim();
+    const params = new URLSearchParams();
+    if (serie) params.append("serie", serie);
+    if (cedula) params.append("cedula", cedula);
+    if (nombre) params.append("nombre", nombre);
 
+    try {
+        mostrarMensaje("Consultando computadora e historial...");
+        const respuesta = await apiFetch(`/api/consultas/computadoras?${params.toString()}`);
 
-            const serie =
-                document
-                    .getElementById("serieComputadora")
-                    .value
-                    .trim();
+        if (!respuesta) return;
 
-
-            if (!nombre && !serie) {
-
-                mostrarMensaje(
-                    "Ingrese el nombre del equipo, la serie o ambos.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            const params =
-                new URLSearchParams();
-
-
-            if (nombre) {
-
-                params.append(
-                    "nombre",
-                    nombre
-                );
-
-            }
-
-
-            if (serie) {
-
-                params.append(
-                    "serie",
-                    serie
-                );
-
-            }
-
-
-            try {
-
-                mostrarMensaje(
-                    "Consultando computadora..."
-                );
-
-
-                const respuesta =
-                    await apiFetch(
-                        `/api/consultas/computadoras?${params.toString()}`
-                    );
-
-
-                if (!respuesta) {
-
-                    return;
-
-                }
-
-
-                if (!respuesta.ok) {
-
-                    await mostrarErrorRespuesta(
-                        respuesta,
-                        "No se encontraron computadoras con esos datos."
-                    );
-
-
-                    ocultarResultado(
-                        "resultadoComputadora"
-                    );
-
-
-                    return;
-
-                }
-
-
-                const resultados =
-                    await respuesta.json();
-
-
-                if (!resultados.length) {
-
-                    ocultarResultado(
-                        "resultadoComputadora"
-                    );
-
-
-                    mostrarMensaje(
-                        "No se encontró una computadora con los criterios indicados.",
-                        true
-                    );
-
-
-                    return;
-
-                }
-
-
-                mostrarResultadosComputadoras(
-                    resultados
-                );
-
-
-                document
-                    .getElementById(
-                        "resultadoComputadora"
-                    )
-                    .style.display =
-                    "block";
-
-
-                ocultarMensaje();
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                ocultarResultado(
-                    "resultadoComputadora"
-                );
-
-
-                mostrarMensaje(
-                    "Error de conexión con el servidor.",
-                    true
-                );
-
-            }
-
+        if (!respuesta.ok) {
+            await mostrarErrorRespuesta(respuesta, "No se encontraron computadoras con esos criterios.");
+            ocultarResultado("resultadoComputadora");
+            return;
         }
-    );
 
+        const resultados = await respuesta.json();
+
+        if (!resultados || resultados.length === 0) {
+            ocultarResultado("resultadoComputadora");
+            mostrarMensaje("No se encontraron computadoras con los criterios indicados.", true);
+            return;
+        }
+
+        mostrarResultadosComputadoras(resultados);
+        document.getElementById("resultadoComputadora").style.display = "block";
+        ocultarMensaje();
+
+    } catch (error) {
+        console.error(error);
+        ocultarResultado("resultadoComputadora");
+        mostrarMensaje("Error de conexión con el servidor.", true);
+    }
+});
 
 // ========================================
-// MOSTRAR COMPUTADORA + HISTORIAL
+// MOSTRAR RESULTADOS COMPUTADORAS
 // ========================================
 
-function mostrarResultadosComputadoras(
-    resultados
-) {
-
-    const contenedor =
-        document.getElementById(
-            "listaComputadorasConsulta"
-        );
-
-
+function mostrarResultadosComputadoras(resultados) {
+    const contenedor = document.getElementById("listaComputadorasConsulta");
     contenedor.innerHTML = "";
 
-
-    resultados.forEach(
-        resultado => {
-
-            const computadora =
-                resultado.computadora;
-
-
-            const actual =
-                resultado.funcionarioActual;
-
-
-            const asignaciones =
-                resultado.historialAsignaciones ||
-                [];
-
-
-            const mantenimientos =
-                resultado.historialMantenimientos ||
-                [];
-
-
-            // ------------------------------
-            // HISTORIAL ASIGNACIONES
-            // ------------------------------
-
-            const historialHtml =
-                asignaciones.length
-
-                    ? asignaciones.map(
-                        asignacion => `
-
-                            <tr>
-
-                                <td>
-                                    ${esc(
-                            asignacion.nombreFuncionario ||
-                            "Sin nombre"
-                        )}
-                                </td>
-
-                                <td>
-                                    ${esc(
-                            asignacion.cedulaFuncionario ||
-                            "N/A"
-                        )}
-                                </td>
-
-                                <td>
-                                    ${formatearFecha(
-                            asignacion.fechaAsignacion
-                        )}
-                                </td>
-
-                                <td>
-
-                                    ${
-                            asignacion.fechaFin
-
-                                ? formatearFecha(
-                                    asignacion.fechaFin
-                                )
-
-                                : "<strong>Actual</strong>"
-                        }
-
-                                </td>
-
-                            </tr>
-
-                        `
-                    ).join("")
-
-                    :
-
-                    `
-
-                        <tr>
-
-                            <td
-                                colspan="4"
-                                class="sin-datos">
-
-                                No existe historial
-                                de asignaciones.
-
-                            </td>
-
-                        </tr>
-
-                    `;
-
-
-            // ------------------------------
-            // HISTORIAL MANTENIMIENTOS
-            // ------------------------------
-
-            const mantenimientosHtml =
-                mantenimientos.length
-
-                    ? mantenimientos.map(
-                        mantenimiento => `
-
-                            <tr>
-
-                                <td>
-                                    ${formatearFecha(
-                            mantenimiento.fechaMantenimiento
-                        )}
-                                </td>
-
-                                <td>
-                                    ${esc(
-                            mantenimiento.tipoMantenimiento
-                        )}
-                                </td>
-
-                                <td>
-                                    ${esc(
-                            mantenimiento.diagnostico
-                        )}
-                                </td>
-
-                                <td>
-                                    ${esc(
-                            mantenimiento.trabajoRealizado
-                        )}
-                                </td>
-
-                                <td>
-                                    ${esc(
-                            mantenimiento.nombreUsuario
-                        )}
-                                </td>
-
-                                <td>
-                                    $${esc(
-                            mantenimiento.costo
-                        )}
-                                </td>
-
-                                <td>
-                                    ${botonEditar("mantenimiento", mantenimiento.id)}
-                                </td>
-
-                            </tr>
-
-                        `
-                    ).join("")
-
-                    :
-
-                    `
-
-                        <tr>
-
-                            <td
-                                colspan="7"
-                                class="sin-datos">
-
-                                No existen mantenimientos
-                                registrados.
-
-                            </td>
-
-                        </tr>
-
-                    `;
-
-
-            // ------------------------------
-            // TARJETA
-            // ------------------------------
-
-            contenedor.innerHTML += `
-
-                <section
-                        class="
-                            panel
-                            consulta-result-card
-                            resultado-computadora
-                        "
-                        data-computadora-id="${Number(computadora.id)}">
-
-
-                    <h2>
-
-                        ${esc(
-                computadora.nombreEquipo
-            )}
-
-                    </h2>
-
-
-                    <p class="consulta-subtitle">
-
-                        Serie:
-                        ${esc(
-                computadora.serie
-            )}
-
-                    </p>
-
-                    <div class="form-buttons">
-
-                        ${botonEditar("computadora", computadora.id)}
-
-                        <button
-                                type="button"
-                                class="btn btn-secondary"
-                                onclick="generarReporteComputadora(${Number(computadora.id)})">
-
-                            Generar reporte
-
-                        </button>
-
+    resultados.forEach(resultado => {
+        const pc = resultado.computadora;
+        const actual = resultado.funcionarioActual;
+        const asignaciones = resultado.historialAsignaciones || [];
+        const mantenimientos = resultado.historialMantenimientos || [];
+
+        const nombreFuncActual = actual
+            ? (actual.nombres && actual.apellidos ? `${actual.nombres} ${actual.apellidos}` : actual.nombrePila)
+            : null;
+
+        const historialHtml = asignaciones.length
+            ? asignaciones.map(a => `
+                <tr>
+                    <td><strong>${esc(a.nombreFuncionario || "Sin nombre")}</strong></td>
+                    <td>${esc(a.cedulaFuncionario || "N/A")}</td>
+                    <td>${formatearFecha(a.fechaAsignacion)}</td>
+                    <td>${a.fechaFin ? formatearFecha(a.fechaFin) : '<span class="badge badge-success">Actual</span>'}</td>
+                </tr>
+            `).join("")
+            : `<tr><td colspan="4" class="sin-datos">No existe historial de asignaciones previas.</td></tr>`;
+
+        const mantenimientosHtml = mantenimientos.length
+            ? mantenimientos.map(m => `
+                <tr>
+                    <td>${formatearFecha(m.fechaMantenimiento)}</td>
+                    <td>${esc(m.tipoMantenimiento)}</td>
+                    <td>${esc(m.diagnostico)}</td>
+                    <td>${esc(m.trabajoRealizado)}</td>
+                    <td>${esc(m.nombreResponsable || m.nombreUsuario)}</td>
+                    <td><strong>$${esc(m.costo || 0)}</strong></td>
+                    <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
+                    <td class="text-center">
+                        <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar">✏️</a>
+                    </td>
+                </tr>
+            `).join("")
+            : `<tr><td colspan="8" class="sin-datos">No existen mantenimientos registrados para este equipo.</td></tr>`;
+
+        contenedor.innerHTML += `
+            <section class="panel consulta-result-card resultado-computadora" data-computadora-id="${Number(pc.id)}">
+                <div class="panel-header" style="margin-bottom: 8px;">
+                    <div>
+                        <h2>${esc(pc.nombreEquipo || "Computadora")} — Serie: <span style="color: #2563eb;">${esc(pc.serie)}</span></h2>
+                        <p class="consulta-subtitle">ID: ${pc.id} | Tipo: ${esc(pc.tipo)} | Marca: ${esc(pc.marca)} | Modelo: ${esc(pc.modelo)}</p>
                     </div>
-
-
-                    <!-- INFORMACIÓN EQUIPO -->
-
-                    <div class="consulta-section">
-
-                        <h3>
-                            Información del equipo
-                        </h3>
-
-
-                        <div class="form-grid">
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Marca
-                                </label>
-
-                                <span>
-                                    ${esc(
-                computadora.marca
-            )}
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Modelo
-                                </label>
-
-                                <span>
-                                    ${esc(
-                computadora.modelo
-            )}
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Procesador
-                                </label>
-
-                                <span>
-
-                                    ${esc(
-                computadora.tipoProcesador
-            )}
-
-                                    ${esc(
-                computadora.generacionProcesador
-            )}
-
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    RAM
-                                </label>
-
-                                <span>
-                                    ${esc(
-                computadora.memoriaRAM
-            )}
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Disco
-                                </label>
-
-                                <span>
-
-                                    ${esc(
-                computadora.tipoDisco
-            )}
-
-                                    -
-
-                                    ${esc(
-                computadora.capacidadDiscoGB
-            )}
-                                    GB
-
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Ubicación
-                                </label>
-
-                                <span>
-                                    ${esc(
-                computadora.ubicacion
-            )}
-                                </span>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Estado
-                                </label>
-
-                                <span>
-                                    ${esc(
-                computadora.estado
-            )}
-                                </span>
-
-                            </div>
-
-
-                        </div>
-
+                    <div class="form-buttons" style="margin-top: 0;">
+                        <a href="/computadoras?editar=${encodeURIComponent(pc.id)}" class="btn btn-warning btn-sm">✏️ Editar Equipo</a>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="generarReporteComputadora(${Number(pc.id)})">🖨 Imprimir Ficha</button>
                     </div>
+                </div>
 
-
-                    <!-- FUNCIONARIO ACTUAL -->
-
-                    <div class="consulta-section">
-
-                        <h3>
-                            Funcionario actual
-                        </h3>
-
-
-                        <div class="estado-actual">
-
-                            ${
-                actual
-
-                    ?
-
-                    `
-
-                                    <strong>
-
-                                        ${esc(
-                        actual.nombrePila
-                    )}
-
-                                    </strong>
-
-                                    <br>
-
-                                    Cédula:
-                                    ${esc(
-                        actual.cedula
-                    )}
-
-                                    <br>
-
-                                    Cargo:
-                                    ${esc(
-                        actual.cargo
-                    )}
-
-                                    <br>
-
-                                    Estado:
-                                    ${esc(
-                        actual.estado
-                    )}
-
-                                    `
-
-                    :
-
-                    "Sin funcionario asignado"
-
-            }
-
-                        </div>
-
+                <!-- ESPECIFICACIONES -->
+                <div class="consulta-section">
+                    <h3>Especificaciones Técnicas</h3>
+                    <div class="form-grid-cuatro">
+                        <div class="form-group"><label>Procesador</label><span>${esc(pc.tipoProcesador)} ${esc(pc.generacionProcesador || "")}</span></div>
+                        <div class="form-group"><label>Memoria RAM</label><span>${esc(pc.memoriaRAM)}</span></div>
+                        <div class="form-group"><label>Disco</label><span>${esc(pc.tipoDisco)} - ${esc(pc.capacidadDiscoGB)} GB</span></div>
+                        <div class="form-group"><label>Sistema Operativo</label><span>${esc(pc.sistemaOperativo)}</span></div>
+                        <div class="form-group"><label>Ofimática</label><span>${esc(pc.office || "N/A")}</span></div>
+                        <div class="form-group"><label>Antivirus</label><span>${esc(pc.antivirus || "N/A")}</span></div>
+                        <div class="form-group"><label>IP / Red</label><span>${esc(pc.ip || "N/A")} (${esc(pc.macLan || "Sin MAC")})</span></div>
+                        <div class="form-group"><label>Ubicación / Estado</label><span>${esc(pc.ubicacion)} — <strong>${esc(pc.estado)}</strong></span></div>
                     </div>
+                </div>
 
+                <!-- FUNCIONARIO ACTUAL -->
+                <div class="consulta-section">
+                    <h3>Funcionario Asignado Actual</h3>
+                    <div class="estado-actual ${actual ? '' : 'vacio'}">
+                        ${actual ? `
+                            <strong>👤 ${esc(nombreFuncActual)}</strong><br>
+                            Cédula: <strong>${esc(actual.cedula)}</strong> | Cargo: ${esc(actual.cargo || "N/A")} | Unidad: ${esc(actual.unidadAdministrativa || "N/A")}
+                        ` : `⚠️ Este equipo no tiene ningún funcionario asignado actualmente.`}
+                    </div>
+                </div>
 
-                    <!-- HISTORIAL ASIGNACIONES -->
-
-                    <div class="consulta-section">
-
-                        <h3>
-                            Historial de asignaciones
-                        </h3>
-
-
-                        <div class="table-container">
-
-                            <table>
-
-                                <thead>
-
+                <!-- HISTORIAL ASIGNACIONES -->
+                <div class="consulta-section">
+                    <h3>Historial de Asignaciones</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-
-                                    <th>
-                                        Funcionario
-                                    </th>
-
-                                    <th>
-                                        Cédula
-                                    </th>
-
-                                    <th>
-                                        Desde
-                                    </th>
-
-                                    <th>
-                                        Hasta
-                                    </th>
-
+                                    <th>Funcionario</th>
+                                    <th>Cédula</th>
+                                    <th>Fecha Asignación</th>
+                                    <th>Fecha Desasignación</th>
                                 </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-                                    ${historialHtml}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
+                            </thead>
+                            <tbody>${historialHtml}</tbody>
+                        </table>
                     </div>
+                </div>
 
-
-                    <!-- HISTORIAL MANTENIMIENTOS -->
-
-                    <div class="consulta-section">
-
-                        <h3>
-                            Historial de mantenimientos
-                        </h3>
-
-
-                        <div class="table-container">
-
-                            <table>
-
-                                <thead>
-
+                <!-- HISTORIAL MANTENIMIENTOS -->
+                <div class="consulta-section">
+                    <h3>Historial de Mantenimientos</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-
-                                    <th>
-                                        Fecha
-                                    </th>
-
-                                    <th>
-                                        Tipo
-                                    </th>
-
-                                    <th>
-                                        Diagnóstico
-                                    </th>
-
-                                    <th>
-                                        Trabajo realizado
-                                    </th>
-
-                                    <th>
-                                        Técnico
-                                    </th>
-
-                                    <th>
-                                        Costo
-                                    </th>
-
-                                    <th>
-                                        Acciones
-                                    </th>
-
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Diagnóstico</th>
+                                    <th>Trabajo Realizado</th>
+                                    <th>Responsable</th>
+                                    <th>Costo</th>
+                                    <th>Estado Post.</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-                                    ${mantenimientosHtml}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
+                            </thead>
+                            <tbody>${mantenimientosHtml}</tbody>
+                        </table>
                     </div>
-
-
-                </section>
-
-            `;
-
-        }
-    );
-
+                </div>
+            </section>
+        `;
+    });
 }
-
 
 // ========================================
 // CONSULTA MANTENIMIENTO
 // ========================================
 
-document
-    .getElementById("formMantenimiento")
-    ?.addEventListener(
-        "submit",
-        async event => {
+document.getElementById("formMantenimiento")?.addEventListener("submit", async event => {
+    event.preventDefault();
 
-            event.preventDefault();
+    const serie = document.getElementById("mantenimientoSerie")?.value.trim() || "";
+    const cedula = document.getElementById("mantenimientoCedula")?.value.trim() || "";
+    const desde = document.getElementById("desde").value;
+    const hasta = document.getElementById("hasta").value;
 
+    const params = new URLSearchParams();
+    if (serie) params.append("serie", serie);
+    if (cedula) params.append("cedula", cedula);
+    if (desde) params.append("desde", desde);
+    if (hasta) params.append("hasta", hasta);
 
-            const desde =
-                document
-                    .getElementById("desde")
-                    .value;
+    if (desde && hasta && desde > hasta) {
+        mostrarMensaje("La fecha inicial no puede ser posterior a la fecha final.", true);
+        return;
+    }
 
+    try {
+        mostrarMensaje("Consultando mantenimientos...");
+        const url = params.toString() ? `/api/mantenimientos?${params.toString()}` : "/api/mantenimientos";
+        const respuesta = await apiFetch(url);
 
-            const hasta =
-                document
-                    .getElementById("hasta")
-                    .value;
+        if (!respuesta) return;
 
-
-            if (!desde || !hasta) {
-
-                mostrarMensaje(
-                    "Seleccione las dos fechas.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            if (desde > hasta) {
-
-                mostrarMensaje(
-                    "La fecha inicial no puede ser posterior a la fecha final.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                mostrarMensaje(
-                    "Consultando mantenimientos..."
-                );
-
-
-                const respuesta =
-                    await apiFetch(
-                        `/api/consultas/mantenimientos?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`
-                    );
-
-
-                if (!respuesta) {
-
-                    return;
-
-                }
-
-
-                if (!respuesta.ok) {
-
-                    await mostrarErrorRespuesta(
-                        respuesta,
-                        "No fue posible consultar los mantenimientos."
-                    );
-
-
-                    ocultarResultado(
-                        "resultadoMantenimiento"
-                    );
-
-
-                    return;
-
-                }
-
-
-                const datos =
-                    await respuesta.json();
-
-
-                mostrarMantenimientosConsulta(
-                    datos
-                );
-
-
-                document
-                    .getElementById(
-                        "resultadoMantenimiento"
-                    )
-                    .style.display =
-                    "block";
-
-
-                ocultarMensaje();
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                ocultarResultado(
-                    "resultadoMantenimiento"
-                );
-
-
-                mostrarMensaje(
-                    "Error de conexión con el servidor.",
-                    true
-                );
-
-            }
-
+        if (!respuesta.ok) {
+            await mostrarErrorRespuesta(respuesta, "No fue posible consultar los mantenimientos.");
+            ocultarResultado("resultadoMantenimiento");
+            return;
         }
-    );
 
+        const datos = await respuesta.json();
+        mostrarMantenimientosConsulta(datos);
+        document.getElementById("resultadoMantenimiento").style.display = "block";
+        ocultarMensaje();
+
+    } catch (error) {
+        console.error(error);
+        ocultarResultado("resultadoMantenimiento");
+        mostrarMensaje("Error de conexión con el servidor.", true);
+    }
+});
 
 // ========================================
-// MOSTRAR MANTENIMIENTOS
+// MOSTRAR MANTENIMIENTOS TABLA
 // ========================================
 
-function mostrarMantenimientosConsulta(
-    mantenimientos
-) {
-
-    const tabla =
-        document.getElementById(
-            "tablaMantenimientosConsulta"
-        );
-
-
+function mostrarMantenimientosConsulta(mantenimientos) {
+    const tabla = document.getElementById("tablaMantenimientosConsulta");
     tabla.innerHTML = "";
 
-
-    if (!mantenimientos.length) {
-
-        tabla.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="10"
-                    class="sin-datos">
-
-                    No existen mantenimientos
-                    en el rango seleccionado.
-
-                </td>
-
-            </tr>
-
-        `;
-
+    if (!mantenimientos || mantenimientos.length === 0) {
+        tabla.innerHTML = `<tr><td colspan="10" class="sin-datos">No se encontraron mantenimientos con los criterios ingresados.</td></tr>`;
         return;
-
     }
 
-
-    mantenimientos.forEach(
-        mantenimiento => {
-
-            tabla.innerHTML += `
-
-                <tr>
-
-                    <td>
-
-                        ${formatearFecha(
-                mantenimiento.fechaMantenimiento
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.nombreEquipo
-            )}
-
-                        <br>
-
-                        <small>
-
-                            Serie:
-                            ${esc(
-                mantenimiento.serieComputadora
-            )}
-
-                        </small>
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.tipoMantenimiento
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.diagnostico
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.trabajoRealizado
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.nombreUsuario
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        $${esc(
-                mantenimiento.costo
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.estadoAnterior
-            )}
-
-                    </td>
-
-
-                    <td>
-
-                        ${esc(
-                mantenimiento.estadoPosterior
-            )}
-
-                    </td>
-
-                    <td>
-                        ${botonEditar("mantenimiento", mantenimiento.id)}
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-    );
-
+    mantenimientos.forEach(m => {
+        tabla.innerHTML += `
+            <tr>
+                <td>${formatearFecha(m.fechaMantenimiento)}</td>
+                <td>
+                    <strong>${esc(m.nombreEquipo)}</strong>
+                    <br><small style="color: #64748b;">Serie: ${esc(m.serieComputadora)}</small>
+                </td>
+                <td>${esc(m.nombreFuncionario || "N/A")}</td>
+                <td>${esc(m.tipoMantenimiento)}</td>
+                <td>${esc(m.diagnostico)}</td>
+                <td>${esc(m.trabajoRealizado)}</td>
+                <td>${esc(m.nombreResponsable || m.nombreUsuario || "N/A")}</td>
+                <td><strong>$${esc(m.costo || 0)}</strong></td>
+                <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
+                <td class="text-center">
+                    <div class="acciones-iconos" style="justify-content: center;">
+                        <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar Mantenimiento">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
 }
 
-
 // ========================================
-// LIMPIAR FUNCIONARIO
-// ========================================
-
-document
-    .getElementById("limpiarFuncionario")
-    ?.addEventListener(
-        "click",
-        () => {
-
-            document
-                .getElementById(
-                    "formFuncionario"
-                )
-                .reset();
-
-
-            ocultarResultado(
-                "resultadoFuncionario"
-            );
-
-
-            ocultarMensaje();
-
-        }
-    );
-
-
-// ========================================
-// LIMPIAR COMPUTADORA
+// LIMPIAR BOTONES
 // ========================================
 
-document
-    .getElementById("limpiarComputadora")
-    ?.addEventListener(
-        "click",
-        () => {
+document.getElementById("limpiarFuncionario")?.addEventListener("click", () => {
+    document.getElementById("formFuncionario").reset();
+    ocultarResultado("resultadoFuncionario");
+    ocultarMensaje();
+});
 
-            document
-                .getElementById(
-                    "formComputadora"
-                )
-                .reset();
+document.getElementById("limpiarComputadora")?.addEventListener("click", () => {
+    document.getElementById("formComputadora").reset();
+    ocultarResultado("resultadoComputadora");
+    document.getElementById("listaComputadorasConsulta").innerHTML = "";
+    ocultarMensaje();
+});
 
-
-            ocultarResultado(
-                "resultadoComputadora"
-            );
-
-
-            document
-                .getElementById(
-                    "listaComputadorasConsulta"
-                )
-                .innerHTML = "";
-
-
-            ocultarMensaje();
-
-        }
-    );
-
+document.getElementById("limpiarMantenimiento")?.addEventListener("click", () => {
+    document.getElementById("formMantenimiento").reset();
+    ocultarResultado("resultadoMantenimiento");
+    document.getElementById("tablaMantenimientosConsulta").innerHTML = "";
+    ocultarMensaje();
+});
 
 // ========================================
-// LIMPIAR MANTENIMIENTO
+// UTILIDADES
 // ========================================
 
-document
-    .getElementById("limpiarMantenimiento")
-    ?.addEventListener(
-        "click",
-        () => {
-
-            document
-                .getElementById(
-                    "formMantenimiento"
-                )
-                .reset();
-
-
-            ocultarResultado(
-                "resultadoMantenimiento"
-            );
-
-
-            document
-                .getElementById(
-                    "tablaMantenimientosConsulta"
-                )
-                .innerHTML = "";
-
-
-            ocultarMensaje();
-
-        }
-    );
-
-
-// ========================================
-// FORMATEAR FECHA
-// ========================================
-
-function formatearFecha(
-    fecha
-) {
-
-    if (!fecha) {
-
-        return "N/A";
-
-    }
-
-
-    const fechaObj =
-        new Date(fecha);
-
-
-    return fechaObj.toLocaleString(
-        "es-EC",
-        {
-
-            dateStyle: "short",
-
-            timeStyle: "short"
-
-        }
-    );
-
+function formatearFecha(fecha) {
+    if (!fecha) return "N/A";
+    const fechaObj = new Date(fecha);
+    return isNaN(fechaObj.getTime()) ? String(fecha) : fechaObj.toLocaleDateString("es-EC", { dateStyle: "short" });
 }
-
-
-// ========================================
-// ESCAPAR HTML
-// ========================================
 
 function esc(valor) {
-
-    if (
-        valor === null ||
-        valor === undefined ||
-        valor === ""
-    ) {
-
-        return "N/A";
-
-    }
-
-
+    if (valor === null || valor === undefined || valor === "") return "N/A";
     return String(valor)
-
         .replaceAll("&", "&amp;")
-
         .replaceAll("<", "&lt;")
-
         .replaceAll(">", "&gt;")
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
-
-// ========================================
-// ERROR
-// ========================================
-
-async function mostrarErrorRespuesta(
-    respuesta,
-    mensajePorDefecto
-) {
-
-    mostrarMensaje(
-        await obtenerMensajeError(respuesta, mensajePorDefecto),
-        true
-    );
-
+async function mostrarErrorRespuesta(respuesta, mensajePorDefecto) {
+    mostrarMensaje(await obtenerMensajeError(respuesta, mensajePorDefecto), true);
 }
 
-
-// ========================================
-// MENSAJES
-// ========================================
-
-function mostrarMensaje(
-    mensaje,
-    error = false
-) {
-
-    const elemento =
-        document.getElementById(
-            "mensajeConsulta"
-        );
-
+function mostrarMensaje(mensaje, error = false) {
+    const elemento = document.getElementById("mensajeConsulta");
     if (!elemento) return;
-
-    elemento.textContent =
-        mensaje;
-
-
-    elemento.style.display =
-        "block";
-
-
-    elemento.style.borderLeft =
-        error
-
-            ? "5px solid #dc2626"
-
-            : "5px solid #2563eb";
-
+    elemento.textContent = mensaje;
+    elemento.style.display = "block";
+    elemento.style.borderLeft = error ? "5px solid #dc2626" : "5px solid #2563eb";
 }
-
 
 function ocultarMensaje() {
-
-    const elemento =
-        document.getElementById(
-            "mensajeConsulta"
-        );
-
-    if (elemento) {
-        elemento.style.display =
-            "none";
-    }
-
+    const elemento = document.getElementById("mensajeConsulta");
+    if (elemento) elemento.style.display = "none";
 }
 
-
-function ocultarResultado(
-    id
-) {
-
+function ocultarResultado(id) {
     const el = document.getElementById(id);
-    if (el) {
-        el.style.display = "none";
-    }
-
+    if (el) el.style.display = "none";
 }
 
-
 // ========================================
-// ACCIONES DESDE RESULTADOS
-// ========================================
-
-function botonEditar(
-    tipo,
-    id
-) {
-
-    if (!Number.isInteger(Number(id))) {
-        return "";
-    }
-
-
-    return `
-
-        <button
-                type="button"
-                class="btn btn-warning"
-                onclick="editarDesdeConsulta('${tipo}', ${Number(id)})">
-
-            Editar
-
-        </button>
-
-    `;
-
-}
-
-
-function editarDesdeConsulta(
-    tipo,
-    id
-) {
-
-    const rutas = {
-        funcionario: "/funcionarios",
-        computadora: "/computadoras",
-        mantenimiento: "/mantenimientos"
-    };
-
-
-    const ruta = rutas[tipo];
-
-
-    if (!ruta || !Number.isInteger(Number(id))) {
-        return;
-    }
-
-
-    window.location.href =
-        `${ruta}?editar=${encodeURIComponent(id)}`;
-
-}
-
-
-// ========================================
-// REPORTES IMPRIMIBLES
+// REPORTES
 // ========================================
 
-function generarReporte(
-    titulo,
-    selector
-) {
-
-    const resultado =
-        document.querySelector(selector);
-
-
-    if (!resultado) {
-        return;
-    }
-
+function generarReporte(titulo, selector) {
+    const resultado = document.querySelector(selector);
+    if (!resultado) return;
 
     const contenido = resultado.cloneNode(true);
-
-
-    contenido
-        .querySelectorAll("button, .acciones")
-        .forEach(elemento => elemento.remove());
-
+    contenido.querySelectorAll("button, .acciones-iconos, .form-buttons").forEach(el => el.remove());
 
     const ventana = window.open("", "_blank");
-
-
     if (!ventana) {
-
-        mostrarMensaje(
-            "El navegador bloqueó la ventana del reporte. Permita las ventanas emergentes e intente nuevamente.",
-            true
-        );
-
+        mostrarMensaje("El navegador bloqueó la ventana del reporte. Permita las ventanas emergentes e intente nuevamente.", true);
         return;
-
     }
-
 
     ventana.document.write(`
         <!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${esc(titulo)} - Sistema TIC</title>
             <link rel="stylesheet" href="/css/estilos.css">
             <style>
-                body { padding: 32px; background: #fff; }
-                .reporte-encabezado { margin-bottom: 24px; }
-                .reporte-encabezado h1 { margin-bottom: 6px; }
-                .reporte-fecha { color: #4b5563; }
-                .sidebar, .topbar, .form-buttons { display: none !important; }
+                body { padding: 30px; background: #fff; }
+                .reporte-encabezado { margin-bottom: 20px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+                .sidebar, .topbar, .form-buttons, .consulta-tabs { display: none !important; }
                 .main-content { margin: 0; padding: 0; }
-                @media print {
-                    body { padding: 0; }
-                    .panel, .consulta-result-card { break-inside: avoid; }
-                }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th, td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 12px; }
+                th { background: #f1f5f9; }
+                @media print { body { padding: 0; } }
             </style>
         </head>
         <body>
             <header class="reporte-encabezado">
-                <h1>${esc(titulo)}</h1>
-                <p class="reporte-fecha">Generado el ${esc(new Date().toLocaleString("es-EC"))}</p>
+                <h2>SISTEMA TIC - GOBIERNO DEL ECUADOR</h2>
+                <h3>${esc(titulo)}</h3>
+                <p>Fecha de emisión: ${esc(new Date().toLocaleString("es-EC"))}</p>
             </header>
             ${contenido.innerHTML}
             <script>window.addEventListener("load", () => window.print());</script>
         </body>
         </html>
     `);
-
-
     ventana.document.close();
-
 }
-
 
 function generarReporteComputadora(id) {
-
-    generarReporte(
-        "Reporte de computadora",
-        `.resultado-computadora[data-computadora-id="${Number(id)}"]`
-    );
-
+    generarReporte("Reporte Ficha Técnica de Computadora", `.resultado-computadora[data-computadora-id="${Number(id)}"]`);
 }
 
+document.getElementById("generarReporteFuncionario")?.addEventListener("click", () => {
+    generarReporte("Ficha de Funcionario y Equipos Asignados", "#resultadoFuncionario");
+});
 
-document
-    .getElementById("generarReporteFuncionario")
-    ?.addEventListener(
-        "click",
-        () => generarReporte(
-            "Reporte de funcionario",
-            "#resultadoFuncionario"
-        )
-    );
+document.getElementById("generarReporteMantenimiento")?.addEventListener("click", () => {
+    generarReporte("Reporte General de Mantenimientos", "#resultadoMantenimiento");
+});
 
-
-document
-    .getElementById("generarReporteMantenimiento")
-    ?.addEventListener(
-        "click",
-        () => generarReporte(
-            "Reporte de mantenimientos",
-            "#resultadoMantenimiento"
-        )
-    );
-
-
-// ========================================
-// CONSULTAS RECIENTES
-// ========================================
-
-function guardarConsultaReciente(
-    funcionario
-) {
-
-    const consultas =
-        JSON.parse(
-            localStorage.getItem(
-                "ultimasConsultas"
-            ) || "[]"
-        );
-
-
+function guardarConsultaReciente(funcionario) {
+    const consultas = JSON.parse(localStorage.getItem("ultimasConsultas") || "[]");
+    const nom = funcionario.nombres && funcionario.apellidos ? `${funcionario.nombres} ${funcionario.apellidos}` : funcionario.nombrePila;
     consultas.unshift({
-
-        nombre:
-            funcionario.nombrePila ||
-            "Funcionario",
-
-        tipo:
-            `Consulta de funcionario - ${funcionario.cedula}`,
-
-        icono:
-            "♙",
-
-        hora:
-            new Date().toLocaleTimeString(
-                "es-EC",
-                {
-
-                    hour: "2-digit",
-
-                    minute: "2-digit"
-
-                }
-            )
-
+        nombre: nom || "Funcionario",
+        tipo: `Consulta Funcionario - ${funcionario.cedula}`,
+        icono: "♙",
+        hora: new Date().toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" })
     });
-
-
-    localStorage.setItem(
-        "ultimasConsultas",
-        JSON.stringify(
-            consultas.slice(0, 10)
-        )
-    );
-
+    localStorage.setItem("ultimasConsultas", JSON.stringify(consultas.slice(0, 10)));
 }
 
-const rol =
-    localStorage.getItem("rol");
-
-const menuAdministracion =
-    document.getElementById(
-        "menuAdministracion"
-    );
-
-if (
-    menuAdministracion &&
-    rol !== "ADMIN"
-) {
-
-    menuAdministracion.style.display =
-        "none";
+const rolAdmin = localStorage.getItem("rol");
+const menuAdministracion = document.getElementById("menuAdministracion");
+if (menuAdministracion && rolAdmin !== "ADMIN") {
+    document.querySelectorAll(".menu-dropdown .submenu .submenu-item").forEach(item => {
+        const href = item.getAttribute("href") || "";
+        if (["/usuarios", "/auditoria", "/respaldos", "/configuracion-institucional"].some(p => href.includes(p))) {
+            item.style.display = "none";
+        }
+    });
 }

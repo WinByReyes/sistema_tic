@@ -21,12 +21,18 @@ public interface ComputadoraRepository extends JpaRepository<Computadora, Long> 
 
     Optional<Computadora> findBySerie(String serie);
 
-    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE c.funcionario.id = :funcionarioId")
+    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE c.funcionario.id = :funcionarioId ORDER BY c.id DESC")
     List<Computadora> findByFuncionarioId(@Param("funcionarioId") Long funcionarioId);
 
-    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE LOWER(c.nombreEquipo) LIKE LOWER(CONCAT('%', :nombreEquipo, '%'))")
+    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE LOWER(c.nombreEquipo) LIKE LOWER(CONCAT('%', :nombreEquipo, '%')) ORDER BY c.id DESC")
     List<Computadora> findByNombreEquipoContainingIgnoreCase(@Param("nombreEquipo") String nombreEquipo);
 
-    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE LOWER(c.serie) LIKE LOWER(CONCAT('%', :serie, '%'))")
+    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE LOWER(c.serie) LIKE LOWER(CONCAT('%', :serie, '%')) ORDER BY c.id DESC")
     List<Computadora> findBySerieContainingIgnoreCase(@Param("serie") String serie);
+
+    @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE " +
+            "(:serie IS NULL OR LOWER(c.serie) LIKE LOWER(CONCAT('%', :serie, '%'))) AND " +
+            "(:cedula IS NULL OR (c.funcionario IS NOT NULL AND LOWER(c.funcionario.cedula) LIKE LOWER(CONCAT('%', :cedula, '%')))) " +
+            "ORDER BY c.id DESC")
+    List<Computadora> buscarPorSerieYCedula(@Param("serie") String serie, @Param("cedula") String cedula);
 }

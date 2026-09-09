@@ -167,7 +167,9 @@ public class ConsultaService {
 
             String nombreEquipo,
 
-            String serie) {
+            String serie,
+
+            String cedula) {
 
 
         List<Computadora> computadoras;
@@ -185,12 +187,19 @@ public class ConsultaService {
                         !serie.isBlank();
 
 
-        if (!tieneNombre && !tieneSerie) {
+        boolean tieneCedula =
+
+                cedula != null &&
+                        !cedula.isBlank();
+
+
+        if (!tieneNombre && !tieneSerie && !tieneCedula) {
 
             throw new IllegalArgumentException(
 
-                    "Debe ingresar el nombre del " +
-                            "equipo, la serie o ambos."
+                    "Debe ingresar la cédula del " +
+                            "funcionario, la serie del " +
+                            "equipo o ambos."
 
             );
 
@@ -198,10 +207,67 @@ public class ConsultaService {
 
 
         // ----------------------------------------
+        // CÉDULA (sola o combinada con serie/nombre)
+        // ----------------------------------------
+
+        if (tieneCedula) {
+
+
+            String serieFiltro =
+                    tieneSerie
+                            ? serie.trim()
+                            : null;
+
+
+            computadoras =
+
+                    computadoraRepository
+
+                            .buscarPorSerieYCedula(
+                                    serieFiltro,
+                                    cedula.trim()
+                            );
+
+
+            if (tieneNombre) {
+
+                String nombreFiltro =
+                        nombreEquipo.toLowerCase();
+
+                computadoras =
+
+                        computadoras
+
+                                .stream()
+
+                                .filter(
+                                        computadora ->
+
+                                                computadora
+                                                        .getNombreEquipo() != null
+
+                                                        &&
+
+                                                        computadora
+                                                                .getNombreEquipo()
+                                                                .toLowerCase()
+                                                                .contains(
+                                                                        nombreFiltro
+                                                                )
+                                )
+
+                                .toList();
+
+            }
+
+
+        }
+
+        // ----------------------------------------
         // NOMBRE + SERIE
         // ----------------------------------------
 
-        if (
+        else if (
                 tieneNombre &&
                         tieneSerie
         ) {
@@ -571,16 +637,8 @@ public class ConsultaService {
         );
 
 
-        // Responsable
-        if (mantenimiento.getResponsable() != null) {
-            dto.setResponsableId(mantenimiento.getResponsable().getId());
-            dto.setNombreResponsable(mantenimiento.getResponsable().getNombre());
-            dto.setCargoResponsable(mantenimiento.getResponsable().getCargo());
-        } else {
-            dto.setResponsableId(null);
-            dto.setNombreResponsable(mantenimiento.getResponsableManual());
-            dto.setCargoResponsable(null);
-        }
+        // Responsable (valor del catálogo RESPONSABLE_MANTENIMIENTO)
+        dto.setNombreResponsable(mantenimiento.getResponsable());
 
 
         dto.setFechaHora(
@@ -609,11 +667,6 @@ public class ConsultaService {
 
         dto.setCosto(
                 mantenimiento.getCosto()
-        );
-
-
-        dto.setEstadoAnterior(
-                mantenimiento.getEstadoAnterior()
         );
 
 

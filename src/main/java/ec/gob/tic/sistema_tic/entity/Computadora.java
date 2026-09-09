@@ -24,7 +24,7 @@ public class Computadora {
 
     @NotBlank(message = "La serie es obligatoria")
     @Size(max = 50, message = "La serie no puede superar los 50 caracteres")
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String serie;
 
     @NotBlank(message = "El nombre del equipo es obligatorio")
@@ -32,10 +32,9 @@ public class Computadora {
     @Column(name = "nombre_equipo", nullable = false, length = 50)
     private String nombreEquipo;
 
-    @NotBlank(message = "La procedencia es obligatoria")
     @Size(max = 100, message = "La procedencia no puede superar los 100 caracteres")
-    @Column(nullable = false, length = 100)
-    private String procedencia;
+    @Column(nullable = true, length = 100)
+    private String procedencia = "Institucional";
 
     @NotBlank(message = "El tipo de computadora es obligatorio")
     @Size(max = 100, message = "El tipo no puede superar los 100 caracteres")
@@ -62,10 +61,9 @@ public class Computadora {
     @Column(name = "generacion_procesador", nullable = false, length = 50)
     private String generacionProcesador;
 
-    @NotBlank(message = "La velocidad del procesador es obligatoria")
     @Size(max = 50, message = "La velocidad no puede superar los 50 caracteres")
-    @Column(name = "velocidad_procesador", nullable = false, length = 50)
-    private String velocidadProcesador;
+    @Column(name = "velocidad_procesador", nullable = true, length = 50)
+    private String velocidadProcesador = "N/A";
 
     @NotBlank(message = "La memoria RAM es obligatoria")
     @Size(max = 50, message = "La memoria RAM no puede superar los 50 caracteres")
@@ -87,10 +85,35 @@ public class Computadora {
     @Column(name = "sistema_operativo", nullable = false, length = 50)
     private String sistemaOperativo;
 
-    @NotBlank(message = "La versión de Office es obligatoria")
     @Size(max = 50, message = "Office no puede superar los 50 caracteres")
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String office;
+
+    @Size(max = 50, message = "El antivirus no puede superar los 50 caracteres")
+    @Column(nullable = true, length = 50)
+    private String antivirus;
+
+    @Column(name = "observacion_software", columnDefinition = "TEXT")
+    private String observacionSoftware;
+
+    @Size(max = 50, message = "La IP no puede superar los 50 caracteres")
+    @Column(nullable = true, length = 50)
+    private String ip;
+
+    @Size(max = 50, message = "La MAC LAN no puede superar los 50 caracteres")
+    @Column(name = "mac_lan", nullable = true, length = 50)
+    private String macLan;
+
+    @Size(max = 50, message = "La MAC WIFI no puede superar los 50 caracteres")
+    @Column(name = "mac_wifi", nullable = true, length = 50)
+    private String macWifi;
+
+    @Size(max = 50, message = "El Nro. P.R. no puede superar los 50 caracteres")
+    @Column(name = "nro_pr", nullable = true, length = 50)
+    private String nroPR;
+
+    @Column(name = "observacion_red", columnDefinition = "TEXT")
+    private String observacionRed;
 
     @NotBlank(message = "La ubicación es obligatoria")
     @Size(max = 50, message = "La ubicación no puede superar los 50 caracteres")
@@ -105,16 +128,7 @@ public class Computadora {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public Computadora()
-    {
+    public Computadora() {
         this.fechaCreacion = LocalDateTime.now();
     }
 
@@ -246,12 +260,84 @@ public class Computadora {
         this.office = office;
     }
 
+    public String getOfimatica() {
+        return office;
+    }
+
+    public void setOfimatica(String ofimatica) {
+        this.office = ofimatica;
+    }
+
+    public String getAntivirus() {
+        return antivirus;
+    }
+
+    public void setAntivirus(String antivirus) {
+        this.antivirus = antivirus;
+    }
+
+    public String getObservacionSoftware() {
+        return observacionSoftware;
+    }
+
+    public void setObservacionSoftware(String observacionSoftware) {
+        this.observacionSoftware = observacionSoftware;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getMacLan() {
+        return macLan;
+    }
+
+    public void setMacLan(String macLan) {
+        this.macLan = macLan;
+    }
+
+    public String getMacWifi() {
+        return macWifi;
+    }
+
+    public void setMacWifi(String macWifi) {
+        this.macWifi = macWifi;
+    }
+
+    public String getNroPR() {
+        return nroPR;
+    }
+
+    public void setNroPR(String nroPR) {
+        this.nroPR = nroPR;
+    }
+
+    public String getObservacionRed() {
+        return observacionRed;
+    }
+
+    public void setObservacionRed(String observacionRed) {
+        this.observacionRed = observacionRed;
+    }
+
     public String getUbicacion() {
         return ubicacion;
     }
 
     public void setUbicacion(String ubicacion) {
         this.ubicacion = ubicacion;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     public LocalDateTime getFechaCreacion() {

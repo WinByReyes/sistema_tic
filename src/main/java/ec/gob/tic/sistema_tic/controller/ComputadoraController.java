@@ -24,23 +24,33 @@ public class ComputadoraController {
     // GET /api/computadoras
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping
-    public List<ComputadoraResponseDTO> listarTodas() {
+    public List<ComputadoraResponseDTO> listar(
+            @RequestParam(value = "serie", required = false) String serie,
+            @RequestParam(value = "cedula", required = false) String cedula) {
+        if ((serie != null && !serie.isBlank()) || (cedula != null && !cedula.isBlank())) {
+            return computadoraService.buscar(serie, cedula);
+        }
         return computadoraService.listarTodas();
+    }
+
+    // GET /api/computadoras/funcionario/1
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @GetMapping("/funcionario/{funcionarioId}")
+    public List<ComputadoraResponseDTO> listarPorFuncionario(@PathVariable Long funcionarioId) {
+        return computadoraService.listarPorFuncionario(funcionarioId);
     }
 
     // GET /api/computadoras/1
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping("/{id}")
-    public ResponseEntity<ComputadoraResponseDTO> buscarPorId(
-            @PathVariable Long id) {
+    public ResponseEntity<ComputadoraResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(computadoraService.buscarPorId(id));
     }
 
     // GET /api/computadoras/serie/ABC123
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping("/serie/{serie}")
-    public ResponseEntity<ComputadoraResponseDTO> buscarPorSerie(
-            @PathVariable String serie) {
+    public ResponseEntity<ComputadoraResponseDTO> buscarPorSerie(@PathVariable String serie) {
         return ResponseEntity.ok(computadoraService.buscarPorSerie(serie));
     }
 
@@ -50,7 +60,7 @@ public class ComputadoraController {
             descripcion = "Creó una computadora"
     )
     // POST /api/computadoras
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @PostMapping
     public ResponseEntity<ComputadoraResponseDTO> crear(
            @Valid @RequestBody ComputadoraRequestDTO datos) {
@@ -63,7 +73,7 @@ public class ComputadoraController {
             descripcion = "Actualizó una computadora"
     )
     // PUT /api/computadoras/1
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @PutMapping("/{id}")
     public ResponseEntity<ComputadoraResponseDTO> actualizar(
             @PathVariable Long id,
@@ -79,8 +89,7 @@ public class ComputadoraController {
     // DELETE /api/computadoras/1
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         computadoraService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

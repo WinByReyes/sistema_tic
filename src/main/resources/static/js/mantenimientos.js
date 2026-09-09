@@ -1,2143 +1,650 @@
 let modoEdicion = false;
-
+let funcionariosCache = [];
+let computadorasFuncionarioActual = [];
 
 // ========================================
-// JWT
+// JWT Y SESIÓN
 // ========================================
-
-const token =
-    localStorage.getItem("token");
-
+const token = localStorage.getItem("token");
+const rol = localStorage.getItem("rol");
+const nombreUsuario = localStorage.getItem("nombre") || localStorage.getItem("usuario") || "Usuario del sistema";
 
 if (!token) {
-
-    window.location.href =
-        "/login";
-
+    window.location.href = "/login";
 }
 
-
-// ========================================
-// CERRAR SESIÓN
-// ========================================
-
 function cerrarSesion() {
-
     localStorage.removeItem("token");
     localStorage.removeItem("rol");
     localStorage.removeItem("usuario");
     localStorage.removeItem("nombre");
-
-    window.location.href =
-        "/login";
-
+    window.location.href = "/login";
 }
 
-
-const botonLogout =
-    document.getElementById(
-        "logout"
-    );
-
-
+const botonLogout = document.getElementById("logout");
 if (botonLogout) {
+    botonLogout.addEventListener("click", function(event) {
+        event.preventDefault();
+        cerrarSesion();
+    });
+}
 
-    botonLogout.addEventListener(
-        "click",
-        function(event) {
+const menuAdministracion = document.getElementById("menuAdministracion");
+if (menuAdministracion && rol !== "ADMIN") {
+    document.querySelectorAll(".menu-dropdown .submenu .submenu-item").forEach(item => {
+        const href = item.getAttribute("href") || "";
+        if (["/usuarios", "/auditoria", "/respaldos", "/configuracion-institucional"].some(p => href.includes(p))) {
+            item.style.display = "none";
+        }
+    });
+}
 
+// ========================================
+// CARGAR CATÁLOGOS
+// ========================================
+async function cargarCatalogo(tipo, selectId, textoInicial, valorPorDefecto = "") {
+    try {
+        const respuesta = await apiFetch(`/api/catalogos/activos/${tipo}`);
+        if (!respuesta || !respuesta.ok) return;
+
+        const datos = await respuesta.json();
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = `<option value="">${textoInicial}</option>`;
+
+        let encontradoDefecto = false;
+        datos.forEach(item => {
+            const opcion = document.createElement("option");
+            opcion.value = item.nombre;
+            opcion.textContent = item.nombre;
+            if (valorPorDefecto && item.nombre.toLowerCase() === valorPorDefecto.toLowerCase()) {
+                opcion.selected = true;
+                encontradoDefecto = true;
+            }
+            select.appendChild(opcion);
+        });
+
+        if (valorPorDefecto && !encontradoDefecto) {
+            const opcion = document.createElement("option");
+            opcion.value = valorPorDefecto;
+            opcion.textContent = valorPorDefecto;
+            opcion.selected = true;
+            select.appendChild(opcion);
+        }
+    } catch (error) {
+        console.error(`Error cargando catálogo ${tipo}:`, error);
+    }
+}
+
+async function cargarTodosLosCatalogos() {
+    await Promise.all([
+        cargarCatalogo("RESPONSABLE_MANTENIMIENTO", "responsable", "Seleccione el responsable", "Responsable asignado"),
+        cargarCatalogo("TIPO_MANTENIMIENTO", "tipoMantenimiento", "Seleccione el tipo de mantenimiento"),
+        cargarCatalogo("ESTADO_MANTENIMIENTO", "estadoMantenimiento", "Seleccione el estado del mantenimiento"),
+        cargarCatalogo("ESTADO_POSTERIOR_COMPUTADORA", "estadoPosterior", "Seleccione el estado resultante")
+    ]);
+}
+
+// ========================================
+// PASO 1: BUSCADOR DE FUNCIONARIOS
+// ========================================
+let temporizadorBusqueda = null;
+let funcionariosFiltrados = [];
+
+function iniciarBuscadorFuncionario() {
+    const input = document.getElementById("selectFuncionario");
+    const lista = document.getElementById("listaFuncionarios");
+    if (!input || !lista) return;
+
+    input.addEventListener("input", function() {
+        buscarFuncionarios(this.value);
+    });
+
+    input.addEventListener("focus", function() {
+        if (this.value.trim()) {
+            renderizarListaFuncionarios();
+            lista.style.display = "block";
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (!event.target.closest(".combobox")) {
+            lista.style.display = "none";
+        }
+    });
+}
+
+async function buscarFuncionarios(termino) {
+    const lista = document.getElementById("listaFuncionarios");
+    const terminoLimpio = (termino || "").trim();
+    const funcionarioId = document.getElementById("funcionarioId");
+
+    if (terminoLimpio.length < 2) {
+        lista.style.display = "none";
+        if (funcionarioId) funcionarioId.value = "";
+        return;
+    }
+
+    clearTimeout(temporizadorBusqueda);
+    temporizadorBusqueda = setTimeout(async () => {
+        try {
+            const respuesta = await apiFetch(`/api/funcionarios?buscar=${encodeURIComponent(terminoLimpio)}`);
+            if (!respuesta || !respuesta.ok) return;
+
+            funcionariosFiltrados = await respuesta.json();
+            renderizarListaFuncionarios();
+        } catch (error) {
+            console.error("Error buscando funcionarios:", error);
+        }
+    }, 300);
+}
+
+function renderizarListaFuncionarios() {
+    const lista = document.getElementById("listaFuncionarios");
+    if (!lista) return;
+
+    lista.innerHTML = "";
+
+    if (!funcionariosFiltrados || funcionariosFiltrados.length === 0) {
+        const vacio = document.createElement("div");
+        vacio.className = "combobox-item combobox-vacio";
+        vacio.textContent = "No se encontraron funcionarios";
+        lista.appendChild(vacio);
+        lista.style.display = "block";
+        return;
+    }
+
+    funcionariosFiltrados.forEach(f => {
+        const item = document.createElement("div");
+        item.className = "combobox-item";
+        const nombres = f.nombres || f.nombrePila || "";
+        const apellidos = f.apellidos || "";
+        item.textContent = `${f.cedula} - ${nombres} ${apellidos} (${f.unidadAdministrativa || "Sin área"})`.trim();
+        item.addEventListener("mousedown", function(event) {
             event.preventDefault();
+            seleccionarFuncionario(f);
+        });
+        lista.appendChild(item);
+    });
 
-            cerrarSesion();
-
-        }
-    );
-
+    lista.style.display = "block";
 }
 
+function seleccionarFuncionario(f) {
+    const input = document.getElementById("selectFuncionario");
+    const funcionarioId = document.getElementById("funcionarioId");
+    if (!input || !funcionarioId) return;
 
-// ========================================
-// CARGAR MANTENIMIENTOS
-// ========================================
+    const nombres = f.nombres || f.nombrePila || "";
+    const apellidos = f.apellidos || "";
+    input.value = `${f.cedula} - ${nombres} ${apellidos}`.trim();
+    funcionarioId.value = f.id;
+    document.getElementById("listaFuncionarios").style.display = "none";
 
-async function cargarMantenimientos() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/mantenimientos"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar los mantenimientos"
-            );
-
-        }
-
-
-        const mantenimientos =
-            await respuesta.json();
-
-
-        const tabla =
-            document.getElementById(
-                "tablaMantenimientos"
-            );
-
-
-        tabla.innerHTML = "";
-
-
-        mantenimientos.forEach(
-            mantenimiento => {
-
-                const fila =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                fila.innerHTML = `
-
-                    <td>
-                        ${mantenimiento.id}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.nombreEquipo || "-"
-                )}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.nombreResponsable || "-"
-                )}
-                    </td>
-
-                    <td>
-                        ${formatearFecha(
-                    mantenimiento.fechaMantenimiento
-                )}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.tipoMantenimiento || "-"
-                )}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.estadoMantenimiento || "-"
-                )}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.diagnostico || "-"
-                )}
-                    </td>
-
-                    <td>
-                        $${mantenimiento.costo ?? "0.00"}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.estadoAnterior || "-"
-                )}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                    mantenimiento.estadoPosterior || "-"
-                )}
-                    </td>
-
-                    <td>
-
-                        <div class="acciones">
-
-                            <button
-                                class="btn btn-warning"
-                                onclick="editarMantenimiento(
-                                    ${mantenimiento.id}
-                                )">
-
-                                Editar
-
-                            </button>
-
-
-                            <button
-                                class="btn btn-danger"
-                                onclick="eliminarMantenimiento(
-                                    ${mantenimiento.id}
-                                )">
-
-                                Eliminar
-
-                            </button>
-
-                        </div>
-
-                    </td>
-
-                `;
-
-
-                tabla.appendChild(
-                    fila
-                );
-
-            }
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar los mantenimientos"
-        );
-
-    }
-
+    agregarFuncionarioACache(f);
+    alCambiarFuncionario();
 }
 
-
-// ========================================
-// ESCAPAR HTML
-// ========================================
-
-function escapeHtml(text) {
-
-    return String(text)
-
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-// ========================================
-// FORMATEAR FECHA
-// ========================================
-
-function formatearFecha(fecha) {
-
-    if (!fecha) {
-
-        return "-";
-
-    }
-
-
-    return new Date(fecha)
-        .toLocaleString(
-            "es-EC"
-        );
-
-}
-
-
-// ========================================
-// CARGAR COMPUTADORAS
-// ========================================
-
-async function cargarComputadoras() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/computadoras"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar las computadoras"
-            );
-
-        }
-
-
-        const computadoras =
-            await respuesta.json();
-
-
-        const select =
-            document.getElementById(
-                "computadoraId"
-            );
-
-
-        select.innerHTML = `
-
-            <option value="">
-
-                Seleccione una computadora
-
-            </option>
-
-        `;
-
-
-        computadoras.forEach(
-            computadora => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    computadora.id;
-
-
-                option.textContent =
-                    `${computadora.nombreEquipo}
-                    - ${computadora.serie}`;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar las computadoras"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// CARGAR RESPONSABLES
-// ========================================
-
-async function cargarResponsables() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/responsables/activos"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar los responsables"
-            );
-
-        }
-
-
-        const responsables =
-            await respuesta.json();
-
-
-        const select =
-            document.getElementById(
-                "responsableId"
-            );
-
-
-        select.innerHTML = `
-
-            <option value="">
-
-                Seleccione un responsable
-
-            </option>
-
-        `;
-
-        agregarOpcionOtro(select);
-
-        responsables.forEach(
-            responsable => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    responsable.id;
-
-
-                option.textContent =
-                    responsable.cargo
-
-                        ? `${responsable.nombre}
-                           - ${responsable.cargo}`
-
-                        : responsable.nombre;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar los responsables"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// CARGAR TIPOS DE MANTENIMIENTO
-// ========================================
-
-async function cargarTiposMantenimiento() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/catalogos/activos/TIPO_MANTENIMIENTO"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar los tipos de mantenimiento"
-            );
-
-        }
-
-
-        const catalogos =
-            await respuesta.json();
-
-
-        const select =
-            document.getElementById(
-                "tipoMantenimiento"
-            );
-
-
-        select.innerHTML = `
-
-            <option value="">
-
-                Seleccione un tipo
-
-            </option>
-
-        `;
-
-
-        catalogos.forEach(
-            catalogo => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    catalogo.nombre;
-
-
-                option.textContent =
-                    catalogo.nombre;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-        // ==================================
-        // OPCIÓN OTRO
-        // ==================================
-
-        agregarOpcionOtro(
-            select
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar los tipos de mantenimiento"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// CARGAR ESTADO DEL MANTENIMIENTO
-// ========================================
-
-async function cargarEstadoMantenimiento() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/catalogos/activos/ESTADO_MANTENIMIENTO"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar los estados de mantenimiento"
-            );
-
-        }
-
-
-        const estados =
-            await respuesta.json();
-
-
-        const select =
-            document.getElementById(
-                "estadoMantenimiento"
-            );
-
-
-        select.innerHTML = `
-
-            <option value="">
-
-                Seleccione un estado
-
-            </option>
-
-        `;
-
-
-        estados.forEach(
-            estado => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    estado.nombre;
-
-
-                option.textContent =
-                    estado.nombre;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-        // ==================================
-        // OPCIÓN OTRO
-        // ==================================
-
-        agregarOpcionOtro(
-            select
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar los estados de mantenimiento"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// CARGAR ESTADOS DE COMPUTADORA
-// ========================================
-
-async function cargarEstadosComputadora() {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                "/api/catalogos/activos/ESTADO"
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "No se pudieron cargar los estados de computadora"
-            );
-
-        }
-
-
-        const estados =
-            await respuesta.json();
-
-
-        const selectAnterior =
-            document.getElementById(
-                "estadoAnterior"
-            );
-
-
-        const selectPosterior =
-            document.getElementById(
-                "estadoPosterior"
-            );
-
-
-        selectAnterior.innerHTML = `
-
-            <option value="">
-
-                Seleccione un estado
-
-            </option>
-
-        `;
-
-
-        selectPosterior.innerHTML = `
-
-            <option value="">
-
-                Seleccione un estado
-
-            </option>
-
-        `;
-
-
-        estados.forEach(
-            estado => {
-
-                const optionAnterior =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                optionAnterior.value =
-                    estado.nombre;
-
-
-                optionAnterior.textContent =
-                    estado.nombre;
-
-
-                selectAnterior.appendChild(
-                    optionAnterior
-                );
-
-
-                const optionPosterior =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                optionPosterior.value =
-                    estado.nombre;
-
-
-                optionPosterior.textContent =
-                    estado.nombre;
-
-
-                selectPosterior.appendChild(
-                    optionPosterior
-                );
-
-            }
-        );
-
-
-        // ==================================
-        // OTRO ANTERIOR
-        // ==================================
-
-        agregarOpcionOtro(
-            selectAnterior
-        );
-
-
-        // ==================================
-        // OTRO POSTERIOR
-        // ==================================
-
-        agregarOpcionOtro(
-            selectPosterior
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al cargar los estados de computadora"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// AGREGAR OPCIÓN "OTRO"
-// ========================================
-
-function agregarOpcionOtro(select) {
-
-    if (!select) {
-        return;
-    }
-
-
-    const existe =
-        Array.from(
-            select.options
-        ).some(
-            option =>
-                option.value === "OTRO"
-        );
-
-
-    if (existe) {
-        return;
-    }
-
-
-    const otro =
-        document.createElement(
-            "option"
-        );
-
-
-    otro.value =
-        "OTRO";
-
-
-    otro.textContent =
-        "Otro";
-
-
-    select.appendChild(
-        otro
-    );
-
-}
-
-
-// ========================================
-// MOSTRAR USUARIO REGISTRADOR
-// ========================================
-
-function mostrarUsuarioRegistrador() {
-
-    const nombre =
-        localStorage.getItem(
-            "nombre"
-        );
-
-
-    const usuario =
-        localStorage.getItem(
-            "usuario"
-        );
-
-
-    const campo =
-        document.getElementById(
-            "usuarioRegistrador"
-        );
-
-
-    if (!campo) {
-        return;
-    }
-
-
-    campo.value =
-        nombre
-
-            ? `${nombre} (${usuario})`
-
-            : usuario || "";
-
-}
-
-
-// ========================================
-// CONFIGURAR OPCIÓN "OTRO"
-// ========================================
-
-function configurarOpcionOtro(
-    selectId,
-    containerId,
-    inputId
-) {
-
-    const select =
-        document.getElementById(
-            selectId
-        );
-
-
-    const container =
-        document.getElementById(
-            containerId
-        );
-
-
-    const input =
-        document.getElementById(
-            inputId
-        );
-
-
-    if (
-        !select ||
-        !container ||
-        !input
-    ) {
-
-        return;
-
-    }
-
-
-    select.addEventListener(
-        "change",
-        function() {
-
-            if (
-                this.value === "OTRO"
-            ) {
-
-                container.style.display =
-                    "block";
-
-
-                input.required =
-                    true;
-
-
-                input.focus();
-
-            } else {
-
-                container.style.display =
-                    "none";
-
-
-                input.required =
-                    false;
-
-
-                input.value =
-                    "";
-
-            }
-
-        }
-    );
-
-}
-
-
-// ========================================
-// OCULTAR CAMPOS "OTRO"
-// ========================================
-
-function ocultarCamposOtro() {
-
-    const configuraciones = [
-
-        {
-            container:
-                "tipoMantenimientoOtroContainer",
-
-            input:
-                "tipoMantenimientoOtro"
-        },
-
-        {
-            container:
-                "estadoMantenimientoOtroContainer",
-
-            input:
-                "estadoMantenimientoOtro"
-        },
-
-        {
-            container:
-                "estadoAnteriorOtroContainer",
-
-            input:
-                "estadoAnteriorOtro"
-        },
-
-        {
-            container:
-                "estadoPosteriorOtroContainer",
-
-            input:
-                "estadoPosteriorOtro"
-        },
-
-        {
-            container: "responsableOtroContainer",
-            input: "responsableOtro"
-        }
-
-    ];
-
-
-
-    configuraciones.forEach(
-        configuracion => {
-
-            const container =
-                document.getElementById(
-                    configuracion.container
-                );
-
-
-            const input =
-                document.getElementById(
-                    configuracion.input
-                );
-
-
-            if (container) {
-
-                container.style.display =
-                    "none";
-
-            }
-
-
-            if (input) {
-
-                input.value =
-                    "";
-
-                input.required =
-                    false;
-
-            }
-
-        }
-    );
-
-}
-
-
-// ========================================
-// OBTENER VALOR DE CATÁLOGO / OTRO
-// ========================================
-
-function obtenerValorCatalogo(
-    selectId,
-    inputId
-) {
-
-    const select =
-        document.getElementById(
-            selectId
-        );
-
-
-    if (!select) {
-        return "";
-    }
-
-
-    let valor =
-        select.value;
-
-
-    if (valor === "OTRO") {
-
-        const input =
-            document.getElementById(
-                inputId
-            );
-
-
-        if (!input) {
-            return "";
-        }
-
-
-        valor =
-            input.value.trim();
-
-    }
-
-
-    return valor;
-
-}
-
-
-// ========================================
-// SELECCIONAR VALOR AL EDITAR
-// ========================================
-
-function seleccionarValorCatalogo(
-    selectId,
-    inputId,
-    containerId,
-    valor
-) {
-
-    const select =
-        document.getElementById(
-            selectId
-        );
-
-
-    const input =
-        document.getElementById(
-            inputId
-        );
-
-
-    const container =
-        document.getElementById(
-            containerId
-        );
-
-
-    if (!select) {
-        return;
-    }
-
-
-    const valorNormalizado =
-        valor == null
-            ? ""
-            : String(valor).trim();
-
-
-    const existe =
-        Array.from(
-            select.options
-        ).some(
-            option =>
-                option.value ===
-                valorNormalizado
-        );
-
-
-    if (
-        valorNormalizado &&
-        existe
-    ) {
-
-        select.value =
-            valorNormalizado;
-
-
-        if (container) {
-
-            container.style.display =
-                "none";
-
-        }
-
-
-        if (input) {
-
-            input.value =
-                "";
-
-            input.required =
-                false;
-
-        }
-
-
-        return;
-
-    }
-
-
-    if (valorNormalizado) {
-
-        select.value =
-            "OTRO";
-
-
-        if (container) {
-
-            container.style.display =
-                "block";
-
-        }
-
-
-        if (input) {
-
-            input.value =
-                valorNormalizado;
-
-            input.required =
-                true;
-
-        }
-
-
+function agregarFuncionarioACache(f) {
+    const indice = funcionariosCache.findIndex(item => String(item.id) === String(f.id));
+    if (indice >= 0) {
+        funcionariosCache[indice] = f;
     } else {
+        funcionariosCache.push(f);
+    }
+}
 
-        select.value =
-            "";
+async function cargarFuncionarioPorId(id) {
+    if (!id) return null;
+    const existente = funcionariosCache.find(f => String(f.id) === String(id));
+    if (existente) return existente;
+    try {
+        const respuesta = await apiFetch(`/api/funcionarios/${id}`);
+        if (respuesta && respuesta.ok) {
+            const f = await respuesta.json();
+            agregarFuncionarioACache(f);
+            return f;
+        }
+    } catch (error) {
+        console.error("Error cargando funcionario:", error);
+    }
+    return null;
+}
 
+// ========================================
+// PASO 2: AL SELECCIONAR FUNCIONARIO
+// ========================================
+async function alCambiarFuncionario() {
+    const funcionarioId = document.getElementById("funcionarioId")?.value;
+    const selectSerie = document.getElementById("selectPcSerie");
+    const selectNombre = document.getElementById("selectPcNombre");
+    const infoCard = document.getElementById("infoComputadoraCard");
 
-        if (container) {
+    selectSerie.innerHTML = `<option value="">Seleccione el número de serie...</option>`;
+    selectNombre.innerHTML = `<option value="">Seleccione el nombre de equipo...</option>`;
+    document.getElementById("computadoraId").value = "";
+    infoCard.style.display = "none";
+    computadorasFuncionarioActual = [];
 
-            container.style.display =
-                "none";
+    if (!funcionarioId) return;
 
+    try {
+        const respuesta = await apiFetch(`/api/computadoras/funcionario/${funcionarioId}`);
+        if (!respuesta || !respuesta.ok) return;
+
+        computadorasFuncionarioActual = await respuesta.json();
+
+        if (computadorasFuncionarioActual.length === 0) {
+            selectSerie.innerHTML = `<option value="">Este funcionario no tiene computadoras asignadas</option>`;
+            selectNombre.innerHTML = `<option value="">Este funcionario no tiene computadoras asignadas</option>`;
+            return;
         }
 
+        computadorasFuncionarioActual.forEach(pc => {
+            const optSerie = document.createElement("option");
+            optSerie.value = pc.id;
+            optSerie.textContent = `${pc.serie} (${pc.marca || ""} ${pc.modelo || ""})`;
+            selectSerie.appendChild(optSerie);
 
-        if (input) {
+            const optNombre = document.createElement("option");
+            optNombre.value = pc.id;
+            optNombre.textContent = `${pc.nombreEquipo} - ${pc.serie}`;
+            selectNombre.appendChild(optNombre);
+        });
 
-            input.value =
-                "";
-
-            input.required =
-                false;
-
+        // Si tiene 1 sola computadora, autoseleccionarla
+        if (computadorasFuncionarioActual.length === 1) {
+            const singlePc = computadorasFuncionarioActual[0];
+            selectSerie.value = singlePc.id;
+            selectNombre.value = singlePc.id;
+            mostrarDetallesComputadora(singlePc);
         }
+    } catch (error) {
+        console.error("Error al cargar computadoras del funcionario:", error);
+    }
+}
 
+function alCambiarPcPorSerie() {
+    const pcId = document.getElementById("selectPcSerie").value;
+    document.getElementById("selectPcNombre").value = pcId;
+    sincronizarComputadoraSeleccionada(pcId);
+}
+
+function alCambiarPcPorNombre() {
+    const pcId = document.getElementById("selectPcNombre").value;
+    document.getElementById("selectPcSerie").value = pcId;
+    sincronizarComputadoraSeleccionada(pcId);
+}
+
+function sincronizarComputadoraSeleccionada(pcId) {
+    if (!pcId) {
+        document.getElementById("computadoraId").value = "";
+        document.getElementById("infoComputadoraCard").style.display = "none";
+        return;
     }
 
+    const pc = computadorasFuncionarioActual.find(p => String(p.id) === String(pcId));
+    if (pc) {
+        mostrarDetallesComputadora(pc);
+    }
 }
 
+// ========================================
+// PASO 3: MOSTRAR DATOS AUTOMÁTICOS DE COMPUTADORA
+// ========================================
+function mostrarDetallesComputadora(pc) {
+    document.getElementById("computadoraId").value = pc.id;
+
+    const funcionarioId = document.getElementById("funcionarioId").value;
+    const funcionario = funcionariosCache.find(f => String(f.id) === String(funcionarioId));
+
+    document.getElementById("infoFuncionario").textContent = funcionario ? `${funcionario.nombres || funcionario.nombrePila} ${funcionario.apellidos || ""}`.trim() : (pc.nombreFuncionario || "—");
+    document.getElementById("infoCedula").textContent = (funcionario && funcionario.cedula) ? funcionario.cedula : (pc.cedulaFuncionario || "—");
+    document.getElementById("infoUnidad").textContent = funcionario ? (funcionario.unidadAdministrativa || "—") : (pc.unidadAdministrativaFuncionario || "—");
+    document.getElementById("infoNombreEquipo").textContent = pc.nombreEquipo || "—";
+    document.getElementById("infoSerie").textContent = pc.serie || "—";
+    document.getElementById("infoMarcaModelo").textContent = `${pc.marca || "—"} / ${pc.modelo || "—"}`;
+    document.getElementById("infoTipo").textContent = pc.tipo || "—";
+    document.getElementById("infoUbicacion").textContent = pc.ubicacion || "—";
+    document.getElementById("infoEstadoActual").textContent = pc.estado || "OPERATIVO";
+
+    document.getElementById("infoComputadoraCard").style.display = "block";
+}
 
 // ========================================
-// ABRIR FORMULARIO
+// CARGAR MANTENIMIENTOS / TABLA
 // ========================================
+async function cargarMantenimientos(url = "/api/mantenimientos") {
+    try {
+        const respuesta = await apiFetch(url);
+        if (!respuesta || !respuesta.ok) throw new Error("No se pudieron cargar los mantenimientos");
 
+        const mantenimientos = await respuesta.json();
+        renderizarTablaMantenimientos(mantenimientos);
+    } catch (error) {
+        console.error(error);
+        alert("Error al cargar la lista de mantenimientos");
+    }
+}
+
+function renderizarTablaMantenimientos(mantenimientos) {
+    const tabla = document.getElementById("tablaMantenimientos");
+    if (!tabla) return;
+    tabla.innerHTML = "";
+
+    if (!mantenimientos || mantenimientos.length === 0) {
+        tabla.innerHTML = `<tr><td colspan="10" class="sin-datos">No se encontraron mantenimientos registrados.</td></tr>`;
+        return;
+    }
+
+    mantenimientos.forEach(m => {
+        const fila = document.createElement("tr");
+
+        let badgeClase = "badge-info";
+        const estadoNorm = (m.estadoMantenimiento || "").toUpperCase();
+        if (estadoNorm.includes("COMPLETADO") || estadoNorm.includes("FINALIZADO") || estadoNorm.includes("EXITOSO")) {
+            badgeClase = "badge-success";
+        } else if (estadoNorm.includes("CANCELADO") || estadoNorm.includes("FALLIDO")) {
+            badgeClase = "badge-danger";
+        } else if (estadoNorm.includes("PROCESO") || estadoNorm.includes("PENDIENTE")) {
+            badgeClase = "badge-warning";
+        }
+
+        const fechaStr = m.fechaMantenimiento ? m.fechaMantenimiento.replace("T", " ").substring(0, 16) : "—";
+        const funcionarioOEquipo = m.nombreFuncionario ? `${m.nombreFuncionario} (${m.nombreEquipo || "PC"})` : (m.nombreEquipo || "PC");
+
+        let botonEliminar = "";
+        if (rol === "ADMIN") {
+            botonEliminar = `
+                <button type="button" class="btn-icon btn-icon-danger" title="Eliminar mantenimiento" aria-label="Eliminar mantenimiento" onclick="eliminarMantenimiento(${m.id})">
+                    🗑️
+                </button>
+            `;
+        }
+
+        fila.innerHTML = `
+            <td><strong>${m.id}</strong></td>
+            <td>${funcionarioOEquipo}</td>
+            <td><strong>${m.serie || "—"}</strong></td>
+            <td>${m.nombreResponsable || "Responsable asignado"}</td>
+            <td>${fechaStr}</td>
+            <td>${m.tipoMantenimiento || "—"}</td>
+            <td><span class="badge ${badgeClase}">${m.estadoMantenimiento || "COMPLETADO"}</span></td>
+            <td>$${m.costo ? Number(m.costo).toFixed(2) : "0.00"}</td>
+            <td><span class="badge badge-success">${m.estadoPosterior || "OPERATIVO"}</span></td>
+            <td style="text-align: center;">
+                <div class="acciones-iconos" style="justify-content: center;">
+                    <button type="button" class="btn-icon btn-icon-warning" title="Editar mantenimiento" aria-label="Editar mantenimiento" onclick="editarMantenimiento(${m.id})">
+                        ✏️
+                    </button>
+                    ${botonEliminar}
+                </div>
+            </td>
+        `;
+
+        tabla.appendChild(fila);
+    });
+}
+
+// ========================================
+// BÚSQUEDA DUAL (CÉDULA Y/O SERIE)
+// ========================================
+async function buscarMantenimientos() {
+    const cedula = document.getElementById("buscarCedula")?.value.trim();
+    const serie = document.getElementById("buscarSerie")?.value.trim();
+
+    const params = new URLSearchParams();
+    if (cedula) params.append("cedula", cedula);
+    if (serie) params.append("serie", serie);
+
+    const queryString = params.toString();
+    const url = queryString ? `/api/mantenimientos?${queryString}` : "/api/mantenimientos";
+    await cargarMantenimientos(url);
+}
+
+function limpiarBusqueda() {
+    if (document.getElementById("buscarCedula")) document.getElementById("buscarCedula").value = "";
+    if (document.getElementById("buscarSerie")) document.getElementById("buscarSerie").value = "";
+    cargarMantenimientos();
+}
+
+// ========================================
+// ABRIR / CERRAR FORMULARIO
+// ========================================
 async function abrirFormulario() {
+    modoEdicion = false;
+    const form = document.getElementById("mantenimientoForm");
+    if (form) form.reset();
 
-    modoEdicion =
-        false;
+    document.getElementById("mantenimientoId").value = "";
+    document.getElementById("computadoraId").value = "";
+    document.getElementById("tituloFormulario").textContent = "Nuevo mantenimiento";
+    document.getElementById("usuarioRegistrador").value = nombreUsuario;
+    document.getElementById("infoComputadoraCard").style.display = "none";
 
+    // Set default datetime to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById("fechaMantenimiento").value = now.toISOString().slice(0, 16);
+    document.getElementById("costo").value = "0.00";
 
-    const formulario =
-        document.getElementById(
-            "mantenimientoForm"
-        );
+    const inputFuncionario = document.getElementById("selectFuncionario");
+    if (inputFuncionario) inputFuncionario.value = "";
+    document.getElementById("funcionarioId").value = "";
+    document.getElementById("listaFuncionarios").style.display = "none";
+    document.getElementById("selectPcSerie").innerHTML = `<option value="">Seleccione el número de serie...</option>`;
+    document.getElementById("selectPcNombre").innerHTML = `<option value="">Seleccione el nombre de equipo...</option>`;
 
+    await cargarTodosLosCatalogos();
 
-    formulario.reset();
+    const panel = document.getElementById("formularioMantenimiento");
+    panel.style.display = "block";
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
 
-
-    ocultarCamposOtro();
-
-
-    document
-        .getElementById(
-            "mantenimientoId"
-        )
-        .value =
-        "";
-
-
-    document
-        .getElementById(
-            "tituloFormulario"
-        )
-        .textContent =
-        "Nuevo mantenimiento";
-
-
-    await cargarComputadoras();
-
-    await cargarResponsables();
-
-    await cargarTiposMantenimiento();
-
-    await cargarEstadoMantenimiento();
-
-    await cargarEstadosComputadora();
-
-
-    mostrarUsuarioRegistrador();
-
-
-    document
-        .getElementById(
-            "formularioMantenimiento"
-        )
-        .style.display =
-        "block";
-
+    setTimeout(() => {
+        document.getElementById("selectFuncionario")?.focus();
+    }, 250);
 }
-
-
-// ========================================
-// CERRAR FORMULARIO
-// ========================================
 
 function cerrarFormulario() {
-
-    document
-        .getElementById(
-            "formularioMantenimiento"
-        )
-        .style.display =
-        "none";
-
-
-    ocultarCamposOtro();
-
+    const panel = document.getElementById("formularioMantenimiento");
+    panel.style.display = "none";
+    document.getElementById("mantenimientoForm")?.reset();
+    document.getElementById("funcionarioId").value = "";
+    document.getElementById("infoComputadoraCard").style.display = "none";
+    document.getElementById("listaFuncionarios").style.display = "none";
 }
 
-
 // ========================================
-// CONFIGURAR LISTENERS "OTRO"
+// GUARDAR / ACTUALIZAR
 // ========================================
-
-configurarOpcionOtro(
-    "tipoMantenimiento",
-    "tipoMantenimientoOtroContainer",
-    "tipoMantenimientoOtro"
-);
-
-configurarOpcionOtro(
-    "responsableId",
-    "responsableOtroContainer",
-    "responsableOtro"
-);
-
-
-configurarOpcionOtro(
-    "estadoMantenimiento",
-    "estadoMantenimientoOtroContainer",
-    "estadoMantenimientoOtro"
-);
-
-
-configurarOpcionOtro(
-    "estadoAnterior",
-    "estadoAnteriorOtroContainer",
-    "estadoAnteriorOtro"
-);
-
-
-configurarOpcionOtro(
-    "estadoPosterior",
-    "estadoPosteriorOtroContainer",
-    "estadoPosteriorOtro"
-);
-
-
-// ========================================
-// CREAR / ACTUALIZAR
-// ========================================
-
-const formularioMantenimiento =
-    document.getElementById(
-        "mantenimientoForm"
-    );
-
-
-if (formularioMantenimiento) {
-
-    formularioMantenimiento
-        .addEventListener(
-            "submit",
-            async function(event) {
-
-                event.preventDefault();
-
-
-                const id =
-                    document
-                        .getElementById(
-                            "mantenimientoId"
-                        )
-                        .value;
-
-
-                // ====================================
-                // OBTENER VALORES
-                // ====================================
-
-                const tipoMantenimiento =
-                    obtenerValorCatalogo(
-                        "tipoMantenimiento",
-                        "tipoMantenimientoOtro"
-                    );
-
-
-                const estadoMantenimiento =
-                    obtenerValorCatalogo(
-                        "estadoMantenimiento",
-                        "estadoMantenimientoOtro"
-                    );
-
-
-                const estadoAnterior =
-                    obtenerValorCatalogo(
-                        "estadoAnterior",
-                        "estadoAnteriorOtro"
-                    );
-
-
-                const estadoPosterior =
-                    obtenerValorCatalogo(
-                        "estadoPosterior",
-                        "estadoPosteriorOtro"
-                    );
-
-
-                const responsableSeleccionado =
-                    document.getElementById("responsableId").value;
-
-                const esResponsableManual =
-                    responsableSeleccionado === "OTRO";
-
-                const responsableIdEnviar =
-                    esResponsableManual || !responsableSeleccionado
-                        ? null
-                        : Number(responsableSeleccionado);
-
-                const responsableManualEnviar =
-                    esResponsableManual
-                        ? document.getElementById("responsableOtro").value.trim()
-                        : null;
-
-                // ====================================
-                // DATOS
-                // ====================================
-
-                const datos = {
-
-                    computadoraId:
-                        Number(
-                            document
-                                .getElementById(
-                                    "computadoraId"
-                                )
-                                .value
-                        ),
-
-
-                    responsableId: responsableIdEnviar,
-                    responsableManual: responsableManualEnviar,
-
-
-                    tipoMantenimiento:
-                    tipoMantenimiento,
-
-
-                    estadoMantenimiento:
-                    estadoMantenimiento,
-
-
-                    diagnostico:
-                        document
-                            .getElementById(
-                                "diagnostico"
-                            )
-                            .value
-                            .trim(),
-
-
-                    trabajoRealizado:
-                        document
-                            .getElementById(
-                                "trabajoRealizado"
-                            )
-                            .value
-                            .trim(),
-
-
-                    costo:
-                        Number(
-                            document
-                                .getElementById(
-                                    "costo"
-                                )
-                                .value
-                        ),
-
-
-                    estadoAnterior:
-                    estadoAnterior,
-
-
-                    estadoPosterior:
-                    estadoPosterior,
-
-
-                    observaciones:
-                        document
-                            .getElementById(
-                                "observaciones"
-                            )
-                            .value
-                            .trim(),
-
-
-                    fechaMantenimiento:
-                        document
-                            .getElementById(
-                                "fechaMantenimiento"
-                            )
-                            .value
-
-                };
-
-
-                // ====================================
-                // VALIDACIONES
-                // ====================================
-
-                if (!datos.computadoraId) {
-
-                    alert(
-                        "Debe seleccionar una computadora."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.responsableId && !datos.responsableManual) {
-                    alert("Debe seleccionar un responsable o escribir su nombre.");
-                    return;
-                }
-
-
-                if (!datos.tipoMantenimiento) {
-
-                    alert(
-                        "Debe seleccionar o especificar un tipo de mantenimiento."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.estadoMantenimiento) {
-
-                    alert(
-                        "Debe seleccionar o especificar un estado de mantenimiento."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.diagnostico) {
-
-                    alert(
-                        "Debe ingresar el diagnóstico."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.trabajoRealizado) {
-
-                    alert(
-                        "Debe ingresar el trabajo realizado."
-                    );
-
-                    return;
-
-                }
-
-
-                if (
-                    isNaN(datos.costo) ||
-                    datos.costo < 0
-                ) {
-
-                    alert(
-                        "Debe ingresar un costo válido."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.estadoAnterior) {
-
-                    alert(
-                        "Debe seleccionar o especificar el estado anterior de la computadora."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.estadoPosterior) {
-
-                    alert(
-                        "Debe seleccionar o especificar el estado posterior de la computadora."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.observaciones) {
-
-                    alert(
-                        "Debe ingresar las observaciones."
-                    );
-
-                    return;
-
-                }
-
-
-                if (!datos.fechaMantenimiento) {
-
-                    alert(
-                        "Debe ingresar la fecha del mantenimiento."
-                    );
-
-                    return;
-
-                }
-
-
-                // ====================================
-                // ENVIAR
-                // ====================================
-
-                try {
-
-                    let respuesta;
-
-
-                    // ====================================
-                    // CREAR
-                    // ====================================
-
-                    if (!modoEdicion) {
-
-                        respuesta =
-                            await apiFetch(
-                                "/api/mantenimientos",
-                                {
-
-                                    method: "POST",
-
-                                    body:
-                                        JSON.stringify(
-                                            datos
-                                        )
-
-                                }
-                            );
-
-                    }
-
-
-                        // ====================================
-                        // ACTUALIZAR
-                    // ====================================
-
-                    else {
-
-                        respuesta =
-                            await apiFetch(
-                                `/api/mantenimientos/${id}`,
-                                {
-
-                                    method: "PUT",
-
-                                    body:
-                                        JSON.stringify(
-                                            datos
-                                        )
-
-                                }
-                            );
-
-                    }
-
-
-                    if (!respuesta) {
-                        return;
-                    }
-
-
-                    if (!respuesta.ok) {
-
-                        const mensaje = await obtenerMensajeError(respuesta, "No se pudo guardar el mantenimiento");
-                        alert(mensaje);
-                        return;
-
-                    }
-
-
-                    alert(
-
-                        modoEdicion
-
-                            ? "Mantenimiento actualizado correctamente."
-
-                            : "Mantenimiento creado correctamente."
-
-                    );
-
-
-                    cerrarFormulario();
-
-
-                    await cargarMantenimientos();
-
-
-                } catch (error) {
-
-                    console.error(error);
-
-                    alert(
-                        "Error de conexión con el servidor."
-                    );
-
-                }
-
-            }
-        );
-
-}
-
-
-// ========================================
-// EDITAR
-// ========================================
-
-async function editarMantenimiento(id) {
-
-    try {
-
-        const respuesta =
-            await apiFetch(
-                `/api/mantenimientos/${id}`
-            );
-
-
-        if (!respuesta) {
-            return;
-        }
-
-
-        if (!respuesta.ok) {
-
-            throw new Error(
-                "Mantenimiento no encontrado"
-            );
-
-        }
-
-
-        const mantenimiento =
-            await respuesta.json();
-
-
-        modoEdicion =
-            true;
-
-
-        ocultarCamposOtro();
-
-
-        await cargarComputadoras();
-
-        await cargarResponsables();
-
-        await cargarTiposMantenimiento();
-
-        await cargarEstadoMantenimiento();
-
-        await cargarEstadosComputadora();
-
-
-        // ========================================
-        // ID
-        // ========================================
-
-        document
-            .getElementById(
-                "mantenimientoId"
-            )
-            .value =
-            mantenimiento.id;
-
-
-        // ========================================
-        // COMPUTADORA
-        // ========================================
-
-        document
-            .getElementById(
-                "computadoraId"
-            )
-            .value =
-            mantenimiento.computadoraId;
-
-
-        // ========================================
-        // RESPONSABLE
-        // ========================================
-
-        const selectResponsable = document.getElementById("responsableId");
-        const inputResponsableOtro = document.getElementById("responsableOtro");
-        const containerResponsableOtro = document.getElementById("responsableOtroContainer");
-
-        if (mantenimiento.responsableId) {
-
-            selectResponsable.value = mantenimiento.responsableId;
-
+document.getElementById("mantenimientoForm")?.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const id = document.getElementById("mantenimientoId").value;
+    const computadoraId = document.getElementById("computadoraId").value;
+
+    if (!computadoraId) {
+        const funcionarioSeleccionado = document.getElementById("funcionarioId").value;
+        if (!funcionarioSeleccionado) {
+            alert("Por favor busque y seleccione un funcionario.");
+            document.getElementById("selectFuncionario")?.focus();
         } else {
-
-            selectResponsable.value = "OTRO";
-
-            if (containerResponsableOtro) containerResponsableOtro.style.display = "block";
-
-            if (inputResponsableOtro) {
-                inputResponsableOtro.required = true;
-                inputResponsableOtro.value = mantenimiento.nombreResponsable || "";
-            }
+            alert("Por favor seleccione la computadora del funcionario (por serie o nombre de equipo).");
+            document.getElementById("selectPcSerie")?.focus();
         }
-
-
-        // ========================================
-        // TIPO
-        // ========================================
-
-        seleccionarValorCatalogo(
-
-            "tipoMantenimiento",
-
-            "tipoMantenimientoOtro",
-
-            "tipoMantenimientoOtroContainer",
-
-            mantenimiento.tipoMantenimiento
-
-        );
-
-
-        // ========================================
-        // ESTADO DEL MANTENIMIENTO
-        // ========================================
-
-        seleccionarValorCatalogo(
-
-            "estadoMantenimiento",
-
-            "estadoMantenimientoOtro",
-
-            "estadoMantenimientoOtroContainer",
-
-            mantenimiento.estadoMantenimiento
-
-        );
-
-
-        // ========================================
-        // DIAGNÓSTICO
-        // ========================================
-
-        document
-            .getElementById(
-                "diagnostico"
-            )
-            .value =
-            mantenimiento.diagnostico || "";
-
-
-        // ========================================
-        // TRABAJO REALIZADO
-        // ========================================
-
-        document
-            .getElementById(
-                "trabajoRealizado"
-            )
-            .value =
-            mantenimiento.trabajoRealizado || "";
-
-
-        // ========================================
-        // COSTO
-        // ========================================
-
-        document
-            .getElementById(
-                "costo"
-            )
-            .value =
-            mantenimiento.costo ?? "";
-
-
-        // ========================================
-        // ESTADO ANTERIOR
-        // ========================================
-
-        seleccionarValorCatalogo(
-
-            "estadoAnterior",
-
-            "estadoAnteriorOtro",
-
-            "estadoAnteriorOtroContainer",
-
-            mantenimiento.estadoAnterior
-
-        );
-
-
-        // ========================================
-        // ESTADO POSTERIOR
-        // ========================================
-
-        seleccionarValorCatalogo(
-
-            "estadoPosterior",
-
-            "estadoPosteriorOtro",
-
-            "estadoPosteriorOtroContainer",
-
-            mantenimiento.estadoPosterior
-
-        );
-
-
-        // ========================================
-        // OBSERVACIONES
-        // ========================================
-
-        document
-            .getElementById(
-                "observaciones"
-            )
-            .value =
-            mantenimiento.observaciones || "";
-
-
-        // ========================================
-        // FECHA
-        // ========================================
-
-        if (
-            mantenimiento.fechaMantenimiento
-        ) {
-
-            document
-                .getElementById(
-                    "fechaMantenimiento"
-                )
-                .value =
-                mantenimiento
-                    .fechaMantenimiento
-                    .slice(0, 16);
-
-        } else {
-
-            document
-                .getElementById(
-                    "fechaMantenimiento"
-                )
-                .value =
-                "";
-
-        }
-
-
-        // ========================================
-        // USUARIO
-        // ========================================
-
-        mostrarUsuarioRegistrador();
-
-
-        // ========================================
-        // TÍTULO
-        // ========================================
-
-        document
-            .getElementById(
-                "tituloFormulario"
-            )
-            .textContent =
-            "Editar mantenimiento";
-
-
-        // ========================================
-        // MOSTRAR FORMULARIO
-        // ========================================
-
-        document
-            .getElementById(
-                "formularioMantenimiento"
-            )
-            .style.display =
-            "block";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Error al obtener el mantenimiento."
-        );
-
-    }
-
-}
-
-
-// ========================================
-// ELIMINAR
-// ========================================
-
-async function eliminarMantenimiento(id) {
-
-    if (
-        !confirm(
-            "¿Está seguro de eliminar este mantenimiento?"
-        )
-    ) {
-
         return;
-
     }
 
+    const responsable = document.getElementById("responsable").value.trim() || "Responsable asignado";
+    const tipoMantenimiento = document.getElementById("tipoMantenimiento").value;
+    const estadoMantenimiento = document.getElementById("estadoMantenimiento").value;
+    const estadoPosterior = document.getElementById("estadoPosterior").value;
+    const fechaMantenimiento = document.getElementById("fechaMantenimiento").value;
+    const diagnostico = document.getElementById("diagnostico").value.trim();
+    const trabajoRealizado = document.getElementById("trabajoRealizado").value.trim();
+    const costo = document.getElementById("costo").value || "0.00";
+    const observaciones = document.getElementById("observaciones").value.trim();
+
+    if (!tipoMantenimiento || !estadoMantenimiento || !estadoPosterior || !diagnostico || !trabajoRealizado) {
+        alert("Por favor complete todos los campos obligatorios marcados con asterisco (*).");
+        return;
+    }
+
+    const datos = {
+        computadoraId: Number(computadoraId),
+        responsable: responsable,
+        fechaMantenimiento,
+        tipoMantenimiento,
+        estadoMantenimiento,
+        estadoPosterior,
+        diagnostico,
+        trabajoRealizado,
+        costo: Number(costo),
+        observaciones
+    };
 
     try {
+        let respuesta;
+        if (!modoEdicion) {
+            respuesta = await apiFetch("/api/mantenimientos", {
+                method: "POST",
+                body: JSON.stringify(datos)
+            });
+        } else {
+            respuesta = await apiFetch(`/api/mantenimientos/${id}`, {
+                method: "PUT",
+                body: JSON.stringify(datos)
+            });
+        }
 
-        const respuesta =
-            await apiFetch(
-                `/api/mantenimientos/${id}`,
-                {
+        if (!respuesta) return;
 
-                    method: "DELETE"
-
-                }
-            );
-
-
-        if (!respuesta) {
+        if (!respuesta.ok) {
+            const mensaje = await obtenerMensajeError(respuesta, "No se pudo guardar el mantenimiento");
+            alert(mensaje);
             return;
         }
 
+        alert(modoEdicion ? "Mantenimiento actualizado correctamente" : "Mantenimiento registrado y estado de computadora actualizado correctamente");
+        cerrarFormulario();
+        await cargarMantenimientos();
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión con el servidor");
+    }
+});
+
+// ========================================
+// EDITAR MANTENIMIENTO
+// ========================================
+async function editarMantenimiento(id) {
+    try {
+        const respuesta = await apiFetch(`/api/mantenimientos/${id}`);
+        if (!respuesta || !respuesta.ok) throw new Error("Mantenimiento no encontrado");
+
+        const m = await respuesta.json();
+        modoEdicion = true;
+
+        document.getElementById("mantenimientoId").value = m.id;
+        document.getElementById("computadoraId").value = m.computadoraId;
+        document.getElementById("tituloFormulario").textContent = "Editar mantenimiento";
+        document.getElementById("usuarioRegistrador").value = m.usuarioRegistrador || nombreUsuario;
+
+        await cargarTodosLosCatalogos();
+
+        if (m.fechaMantenimiento) {
+            document.getElementById("fechaMantenimiento").value = m.fechaMantenimiento.slice(0, 16);
+        }
+        document.getElementById("diagnostico").value = m.diagnostico || "";
+        document.getElementById("trabajoRealizado").value = m.trabajoRealizado || "";
+        document.getElementById("costo").value = m.costo || "0.00";
+        document.getElementById("observaciones").value = m.observaciones || "";
+
+        document.getElementById("responsable").value = m.nombreResponsable || "Responsable asignado";
+        document.getElementById("tipoMantenimiento").value = m.tipoMantenimiento || "";
+        document.getElementById("estadoMantenimiento").value = m.estadoMantenimiento || "";
+        document.getElementById("estadoPosterior").value = m.estadoPosterior || "OPERATIVO";
+
+        // Cargar datos de la computadora asociada
+        const pcResp = await apiFetch(`/api/computadoras/${m.computadoraId}`);
+        if (pcResp && pcResp.ok) {
+            const pc = await pcResp.json();
+            const funcId = pc.funcionarioId || (pc.funcionario ? pc.funcionario.id : "");
+            if (funcId) {
+                document.getElementById("funcionarioId").value = funcId;
+                await cargarFuncionarioPorId(funcId);
+                const inputFunc = document.getElementById("selectFuncionario");
+                if (inputFunc) {
+                    const func = funcionariosCache.find(f => String(f.id) === String(funcId));
+                    inputFunc.value = func
+                        ? `${func.cedula} - ${func.nombres || func.nombrePila || ""} ${func.apellidos || ""}`.trim()
+                        : (m.nombreFuncionario || pc.nombreFuncionario || "");
+                }
+                document.getElementById("listaFuncionarios").style.display = "none";
+                await alCambiarFuncionario();
+                document.getElementById("selectPcSerie").value = pc.id;
+                document.getElementById("selectPcNombre").value = pc.id;
+            }
+            mostrarDetallesComputadora(pc);
+        }
+
+        const panel = document.getElementById("formularioMantenimiento");
+        panel.style.display = "block";
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        setTimeout(() => {
+            document.getElementById("diagnostico")?.focus();
+        }, 250);
+    } catch (error) {
+        console.error(error);
+        alert("Error al cargar los datos del mantenimiento");
+    }
+}
+
+// ========================================
+// ELIMINAR MANTENIMIENTO
+// ========================================
+async function eliminarMantenimiento(id) {
+    if (!confirm("¿Está seguro de eliminar este registro de mantenimiento?")) {
+        return;
+    }
+
+    try {
+        const respuesta = await apiFetch(`/api/mantenimientos/${id}`, {
+            method: "DELETE"
+        });
+
+        if (!respuesta) return;
 
         if (!respuesta.ok) {
-
             const mensaje = await obtenerMensajeError(respuesta, "No se pudo eliminar el mantenimiento");
             alert(mensaje);
             return;
-
         }
 
-
-        alert(
-            "Mantenimiento eliminado correctamente."
-        );
-
-
+        alert("Mantenimiento eliminado correctamente");
         await cargarMantenimientos();
-
-
     } catch (error) {
-
         console.error(error);
-
-        alert(
-            "Error de conexión con el servidor."
-        );
-
+        alert("Error de conexión con el servidor");
     }
-
 }
 
-
 // ========================================
-// CONTROL DE ADMINISTRACIÓN
+// INICIALIZACIÓN
 // ========================================
-
-const rol =
-    localStorage.getItem(
-        "rol"
-    );
-
-
-const menuAdministracion =
-    document.getElementById(
-        "menuAdministracion"
-    );
-
-
-if (
-    menuAdministracion &&
-    rol !== "ADMIN"
-) {
-
-    menuAdministracion.style.display =
-        "none";
-
-}
-
-
-// ========================================
-// INICIO
-// ========================================
-
 async function iniciarPagina() {
-
+    iniciarBuscadorFuncionario();
+    await cargarTodosLosCatalogos();
     await cargarMantenimientos();
 
-
-    const idEdicion =
-        new URLSearchParams(window.location.search)
-            .get("editar");
-
-
-    if (!/^\d+$/.test(idEdicion || "")) {
-        return;
+    const idEdicion = new URLSearchParams(window.location.search).get("editar");
+    if (/^\d+$/.test(idEdicion || "")) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        await editarMantenimiento(Number(idEdicion));
     }
-
-
-    window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname
-    );
-
-
-    await editarMantenimiento(Number(idEdicion));
-
 }
-
 
 iniciarPagina();

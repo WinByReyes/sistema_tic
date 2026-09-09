@@ -1,11 +1,12 @@
 package ec.gob.tic.sistema_tic.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 public class ComputadoraRequestDTO {
+
+    private Long funcionarioId;
 
     @Size(max = 10, message = "La cédula no puede superar los 10 caracteres")
     private String cedulaFuncionario;
@@ -18,7 +19,6 @@ public class ComputadoraRequestDTO {
     @Size(max = 50, message = "El nombre del equipo no puede superar los 50 caracteres")
     private String nombreEquipo;
 
-    @NotBlank(message = "La procedencia es obligatoria")
     @Size(max = 100, message = "La procedencia no puede superar los 100 caracteres")
     private String procedencia;
 
@@ -42,7 +42,6 @@ public class ComputadoraRequestDTO {
     @Size(max = 50, message = "La generación no puede superar los 50 caracteres")
     private String generacionProcesador;
 
-    @NotBlank(message = "La velocidad del procesador es obligatoria")
     @Size(max = 50, message = "La velocidad no puede superar los 50 caracteres")
     private String velocidadProcesador;
 
@@ -55,17 +54,34 @@ public class ComputadoraRequestDTO {
     private String tipoDisco;
 
     @NotNull(message = "La capacidad del disco es obligatoria")
-    @DecimalMin(value = "0.0", inclusive = false,
-            message = "La capacidad del disco no puede ser negativa")
+    @DecimalMin(value = "0.0", inclusive = false, message = "La capacidad del disco no puede ser negativa")
     private BigDecimal capacidadDiscoGB;
 
     @NotBlank(message = "El sistema operativo es obligatorio")
     @Size(max = 50, message = "El sistema operativo no puede superar los 50 caracteres")
     private String sistemaOperativo;
 
-    @NotBlank(message = "Office es obligatorio")
     @Size(max = 50, message = "Office no puede superar los 50 caracteres")
     private String office;
+
+    @Size(max = 50, message = "El antivirus no puede superar los 50 caracteres")
+    private String antivirus;
+
+    private String observacionSoftware;
+
+    @Size(max = 50, message = "La IP no puede superar los 50 caracteres")
+    private String ip;
+
+    @Size(max = 50, message = "La MAC LAN no puede superar los 50 caracteres")
+    private String macLan;
+
+    @Size(max = 50, message = "La MAC WIFI no puede superar los 50 caracteres")
+    private String macWifi;
+
+    @Size(max = 50, message = "El Nro. P.R. no puede superar los 50 caracteres")
+    private String nroPR;
+
+    private String observacionRed;
 
     @NotBlank(message = "La ubicación es obligatoria")
     @Size(max = 50, message = "La ubicación no puede superar los 50 caracteres")
@@ -75,15 +91,15 @@ public class ComputadoraRequestDTO {
     @Size(max = 50, message = "El estado no puede superar los 50 caracteres")
     private String estado;
 
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
     public ComputadoraRequestDTO() {
+    }
+
+    public Long getFuncionarioId() {
+        return funcionarioId;
+    }
+
+    public void setFuncionarioId(Long funcionarioId) {
+        this.funcionarioId = funcionarioId;
     }
 
     public String getCedulaFuncionario() {
@@ -206,11 +222,83 @@ public class ComputadoraRequestDTO {
         this.office = office;
     }
 
+    public String getOfimatica() {
+        return office;
+    }
+
+    public void setOfimatica(String ofimatica) {
+        this.office = ofimatica;
+    }
+
+    public String getAntivirus() {
+        return antivirus;
+    }
+
+    public void setAntivirus(String antivirus) {
+        this.antivirus = antivirus;
+    }
+
+    public String getObservacionSoftware() {
+        return observacionSoftware;
+    }
+
+    public void setObservacionSoftware(String observacionSoftware) {
+        this.observacionSoftware = observacionSoftware;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getMacLan() {
+        return macLan;
+    }
+
+    public void setMacLan(String macLan) {
+        this.macLan = macLan;
+    }
+
+    public String getMacWifi() {
+        return macWifi;
+    }
+
+    public void setMacWifi(String macWifi) {
+        this.macWifi = macWifi;
+    }
+
+    public String getNroPR() {
+        return nroPR;
+    }
+
+    public void setNroPR(String nroPR) {
+        this.nroPR = nroPR;
+    }
+
+    public String getObservacionRed() {
+        return observacionRed;
+    }
+
+    public void setObservacionRed(String observacionRed) {
+        this.observacionRed = observacionRed;
+    }
+
     public String getUbicacion() {
         return ubicacion;
     }
 
     public void setUbicacion(String ubicacion) {
         this.ubicacion = ubicacion;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 }

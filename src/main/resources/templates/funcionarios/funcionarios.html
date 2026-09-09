@@ -4,427 +4,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Funcionarios - Sistema TIC</title>
-
     <link rel="stylesheet" href="/css/estilos.css">
 </head>
 
 <body>
 
+<!-- ======================================== -->
+<!-- SIDEBAR -->
+<!-- ======================================== -->
 <aside class="sidebar">
-
     <div class="logo">
-
-        <div class="logo-icon">
-            TIC
-        </div>
-
+        <div class="logo-icon">TIC</div>
         <div class="logo-text">
             <h2>SISTEMA TIC</h2>
             <span>Gestión institucional</span>
         </div>
-
     </div>
 
     <nav class="sidebar-nav">
-
         <a href="/dashboard" class="menu-item">
             <span class="menu-icon">⌂</span>
             <span>Inicio</span>
         </a>
-
         <a href="/usuarios" class="menu-item">
             <span class="menu-icon">♙</span>
             <span>Usuarios</span>
         </a>
-
         <a href="/funcionarios" class="menu-item active">
-            <span class="menu-icon">♙</span>
+            <span class="menu-icon">👷</span>
             <span>Funcionarios</span>
         </a>
-
         <a href="/computadoras" class="menu-item">
-            <span class="menu-icon">▣</span>
+            <span class="menu-icon">▱</span>
             <span>Computadoras</span>
         </a>
-
         <a href="/mantenimientos" class="menu-item">
             <span class="menu-icon">⚙</span>
             <span>Mantenimientos</span>
         </a>
-
         <a href="/consultas" class="menu-item">
-            <span class="menu-icon">⌕</span>
+            <span class="menu-icon">🔍</span>
             <span>Consultas</span>
         </a>
 
         <div class="menu-dropdown">
-
-            <a
-                    href="/administracion"
-                    class="menu-item"
-                    id="menuAdministracion">
-
-        <span class="menu-icon">
-            ⚙
-        </span>
-
-                <span>
-            Administración
-        </span>
-
-                <span class="menu-arrow">
-            ▸
-        </span>
-
+            <a href="/administracion" class="menu-item" id="menuAdministracion">
+                <span class="menu-icon">⚙</span>
+                <span>Administración</span>
+                <span class="menu-arrow">▸</span>
             </a>
-
-
             <div class="submenu">
-
-                <a
-                        href="/usuarios"
-                        class="submenu-item">
-
-            <span>
-                ♙
-            </span>
-
-                    Usuarios
-
+                <a href="/usuarios" class="submenu-item">
+                    <span>♙</span> Usuarios
                 </a>
-
-
-                <a
-                        href="/funcionarios"
-                        class="submenu-item">
-
-            <span>
-                👷
-            </span>
-
-                    Funcionarios
-
+                <a href="/funcionarios" class="submenu-item">
+                    <span>👷</span> Funcionarios
                 </a>
-
-
-                <a
-                        href="/catalogos"
-                        class="submenu-item">
-
-            <span>
-                ⚙
-            </span>
-
-                    Catálogos
-
+                <a href="/catalogos" class="submenu-item">
+                    <span>⚙</span> Catálogos
                 </a>
-
-                <a
-                        href="/auditoria"
-                        class="submenu-item">
-
-            <span>
-                ⌕
-            </span>
-
-                    Auditoría
-
+                <a href="/auditoria" class="submenu-item">
+                    <span>🔍</span> Auditoría
                 </a>
-
-
-                <a
-                        href="/respaldos"
-                        class="submenu-item">
-
-            <span>
-                💾
-            </span>
-
-                    Respaldos
-
+                <a href="/respaldos" class="submenu-item">
+                    <span>💾</span> Respaldos
                 </a>
-
-
-                <a
-                        href="/configuracion-institucional"
-                        class="submenu-item">
-
-            <span>
-                ⌂
-            </span>
-
-                    Configuración Institucional
-
+                <a href="/configuracion-institucional" class="submenu-item">
+                    <span>⌂</span> Configuración Institucional
                 </a>
-
             </div>
-
         </div>
-
     </nav>
 
     <div class="sidebar-footer">
-        <a href="#" id="logout">
-            Cerrar sesión
-        </a>
+        <a href="#" id="logout">Cerrar sesión</a>
     </div>
-
 </aside>
 
-
+<!-- ======================================== -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ======================================== -->
 <main class="main-content">
 
     <header class="topbar">
-
         <div>
             <h1>Funcionarios</h1>
-            <p>Administración de funcionarios</p>
+            <p>Administración y registro de funcionarios institucionales</p>
         </div>
-
     </header>
 
-    <section
-            id="resultadoFuncionario"
-            class="panel"
-            style="display:none;">
-
-        <div class="panel-header">
-
-            <h2>Información del funcionario</h2>
-
+    <!-- BÚSQUEDA -->
+    <div class="search-container">
+        <div class="search-container-header">Búsqueda de funcionarios</div>
+        <div class="search-inputs">
+            <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 0;">
+                <label for="buscarCedula">Buscar por cédula</label>
+                <input type="text" id="buscarCedula" placeholder="Ingrese cédula (10 dígitos)" maxlength="10">
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 0;">
+                <label for="buscarNombre">Buscar por nombres o apellidos</label>
+                <input type="text" id="buscarNombre" placeholder="Ingrese nombre o apellido">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-primary" onclick="buscarFuncionarios()">🔍 Buscar</button>
+                <button type="button" class="btn btn-secondary" onclick="limpiarBusqueda()">Limpiar</button>
+            </div>
         </div>
+    </div>
 
-        <div id="datosFuncionario"></div>
-
-        <h3>Computadoras asignadas</h3>
-
-        <div class="table-container">
-
-            <table>
-
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Equipo</th>
-                    <th>Serie</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Estado</th>
-                </tr>
-                </thead>
-
-                <tbody id="tablaComputadorasFuncionario">
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
+    <!-- LISTADO -->
     <section class="panel">
-
         <div class="panel-header">
-
             <h2>Lista de funcionarios</h2>
-
-            <button
-                    class="btn btn-primary"
-                    onclick="abrirFormulario()">
-
+            <button class="btn btn-primary" onclick="abrirFormulario()">
                 + Nuevo funcionario
-
             </button>
-
         </div>
 
-
         <div class="table-container">
-
             <table>
-
                 <thead>
-
                 <tr>
-                    <th>ID</th>
+                    <th style="width: 50px;">ID</th>
                     <th>Cédula</th>
-                    <th>Nombre</th>
-                    <th>Unidad administrativa</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Unidad Administrativa</th>
                     <th>Cargo</th>
                     <th>Estado</th>
-                    <th>Código biométrico</th>
-                    <th>Acciones</th>
+                    <th>Biométrico</th>
+                    <th style="width: 90px; text-align: center;">Acciones</th>
                 </tr>
-
                 </thead>
-
                 <tbody id="tablaFuncionarios"></tbody>
-
             </table>
-
         </div>
-
     </section>
 
-
     <!-- FORMULARIO -->
-
-    <section
-            id="formularioFuncionario"
-            class="panel formulario-panel"
-            style="display:none;">
-
+    <section id="formularioFuncionario" class="panel formulario-panel" style="display:none;">
         <div class="panel-header">
-
-            <h2 id="tituloFormulario">
-                Nuevo funcionario
-            </h2>
-
+            <h2 id="tituloFormulario">Nuevo funcionario</h2>
         </div>
 
-
         <form id="funcionarioForm">
-
-            <input
-                    type="hidden"
-                    id="funcionarioId">
-
+            <input type="hidden" id="funcionarioId">
 
             <div class="form-grid">
-
                 <div class="form-group">
-
-                    <label>Cédula</label>
-
-                    <input
-                            type="text"
-                            id="cedula"
-                            maxlength="10"
-                            required>
-
+                    <label for="cedula">Cédula *</label>
+                    <input type="text" id="cedula" maxlength="10" placeholder="Ej. 0102030405" required>
+                    <small id="cedulaError" style="color: var(--color-danger); display: none;">Cédula ecuatoriana no válida</small>
                 </div>
 
-
                 <div class="form-group">
-
-                    <label>Nombre</label>
-
-                    <input
-                            type="text"
-                            id="nombrePila"
-                            maxlength="150"
-                            required>
-
+                    <label for="codigoBiometrico">Código biométrico *</label>
+                    <input type="text" id="codigoBiometrico" maxlength="10" placeholder="Ej. BIO-1234" required>
                 </div>
 
-
                 <div class="form-group">
-
-                    <label>Unidad administrativa</label>
-
-                    <input
-                            type="text"
-                            id="unidadAdministrativa"
-                            maxlength="150"
-                            required>
-
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" id="nombres" maxlength="100" placeholder="Nombres completos" required>
                 </div>
 
-
                 <div class="form-group">
-
-                    <label>Cargo</label>
-
-                    <input
-                            type="text"
-                            id="cargo"
-                            maxlength="150"
-                            required>
-
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" id="apellidos" maxlength="100" placeholder="Apellidos completos" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="unidadAdministrativa">Unidad administrativa *</label>
+                    <input type="text" id="unidadAdministrativa" maxlength="150" placeholder="Ej. Dirección de Tecnologías" required>
+                </div>
 
                 <div class="form-group">
+                    <label for="cargo">Cargo *</label>
+                    <input type="text" id="cargo" maxlength="150" placeholder="Ej. Analista de Sistemas" required>
+                </div>
 
-                    <label>Estado</label>
-
-                    <select
-                            id="estado"
-                            required>
-
-                        <option value="">
-                            Seleccione un estado
-                        </option>
-
-                        <option value="ACTIVO">
-                            Activo
-                        </option>
-
-                        <option value="INACTIVO">
-                            Inactivo
-                        </option>
-
-                        <option value="JUBILADO">
-                            Jubilado
-                        </option>
-
-                        <option value="CESADO">
-                            Cesado
-                        </option>
-
+                <div class="form-group">
+                    <label for="estado">Estado *</label>
+                    <select id="estado" required>
+                        <option value="">Seleccione un estado</option>
+                        <option value="ACTIVO" selected>Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                        <option value="JUBILADO">Jubilado</option>
+                        <option value="CESADO">Cesado</option>
                     </select>
-
                 </div>
-
-
-                <div class="form-group">
-
-                    <label>Código biométrico</label>
-
-                    <input
-                            type="text"
-                            id="codigoBiometrico"
-                            maxlength="10"
-                            required>
-
-                </div>
-
             </div>
-
 
             <div class="form-buttons">
-
-                <button
-                        type="submit"
-                        class="btn btn-primary">
-
-                    Guardar
-
-                </button>
-
-                <button
-                        type="button"
-                        class="btn btn-secondary"
-                        onclick="cerrarFormulario()">
-
-                    Cancelar
-
-                </button>
-
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarFormulario()">Cancelar</button>
             </div>
-
         </form>
-
     </section>
 
 </main>
-
 
 <script src="/js/api.js"></script>
 <script src="/js/funcionarios.js"></script>
 
 </body>
-
 </html>

@@ -1,15 +1,23 @@
 package ec.gob.tic.sistema_tic.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class FuncionarioRequestDTO {
 
     @NotBlank(message = "La cédula es obligatoria")
-    @Size(max = 10, message = "La cédula no puede superar los 10 caracteres")
+    @Pattern(regexp = "\\d{10}", message = "La cédula debe contener exactamente 10 dígitos numéricos")
     private String cedula;
 
-    @NotBlank(message = "El nombre es obligatorio")
+    @NotBlank(message = "Los nombres son obligatorios")
+    @Size(max = 150, message = "Los nombres no pueden superar los 150 caracteres")
+    private String nombres;
+
+    @NotBlank(message = "Los apellidos son obligatorios")
+    @Size(max = 150, message = "Los apellidos no pueden superar los 150 caracteres")
+    private String apellidos;
+
     @Size(max = 150, message = "El nombre no puede superar los 150 caracteres")
     private String nombrePila;
 
@@ -40,8 +48,30 @@ public class FuncionarioRequestDTO {
         this.cedula = cedula;
     }
 
+    public String getNombres() {
+        return nombres;
+    }
+
+    public void setNombres(String nombres) {
+        this.nombres = nombres;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
     public String getNombrePila() {
-        return nombrePila;
+        if (nombrePila != null && !nombrePila.isBlank()) {
+            return nombrePila;
+        }
+        if (nombres != null || apellidos != null) {
+            return ((nombres != null ? nombres : "") + " " + (apellidos != null ? apellidos : "")).trim();
+        }
+        return null;
     }
 
     public void setNombrePila(String nombrePila) {

@@ -568,8 +568,39 @@ if (
     userRole !== "ADMIN"
 ) {
 
-    menuAdministracion.style.display =
-        "none";
+    document
+        .querySelectorAll(
+            ".menu-dropdown .submenu .submenu-item"
+        )
+        .forEach(
+            function(item) {
+
+                const href =
+                    item.getAttribute(
+                        "href"
+                    ) ||
+                    "";
+
+                if (
+                    [
+                        "/usuarios",
+                        "/auditoria",
+                        "/respaldos",
+                        "/configuracion-institucional"
+                    ].some(
+                        function(p) {
+                            return href.includes(
+                                p
+                            );
+                        }
+                    )
+                ) {
+
+                    item.style.display =
+                        "none";
+                }
+            }
+        );
 }
 
 

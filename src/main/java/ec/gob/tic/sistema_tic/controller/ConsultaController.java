@@ -85,7 +85,11 @@ public class ConsultaController {
 
             @RequestParam(
                     required = false)
-            String serie) {
+            String serie,
+
+            @RequestParam(
+                    required = false)
+            String cedula) {
 
 
         return ResponseEntity.ok(
@@ -93,7 +97,8 @@ public class ConsultaController {
                 consultaService
                         .consultarComputadoras(
                                 nombre,
-                                serie
+                                serie,
+                                cedula
                         )
 
         );

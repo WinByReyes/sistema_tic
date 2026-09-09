@@ -33,12 +33,35 @@ public class ComputadoraService {
     }
 
     // =========================================================
-    // LISTAR
+    // LISTAR / BUSCAR
     // =========================================================
 
     @Transactional(readOnly = true)
     public List<ComputadoraResponseDTO> listarTodas() {
         return computadoraRepository.findAllWithFuncionario()
+                .stream()
+                .map(ComputadoraResponseDTO::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComputadoraResponseDTO> buscar(String serie, String cedula) {
+        String serieParam = (serie != null && !serie.isBlank()) ? serie.trim() : null;
+        String cedulaParam = (cedula != null && !cedula.isBlank()) ? cedula.trim() : null;
+
+        if (serieParam == null && cedulaParam == null) {
+            return listarTodas();
+        }
+
+        return computadoraRepository.buscarPorSerieYCedula(serieParam, cedulaParam)
+                .stream()
+                .map(ComputadoraResponseDTO::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComputadoraResponseDTO> listarPorFuncionario(Long funcionarioId) {
+        return computadoraRepository.findByFuncionarioId(funcionarioId)
                 .stream()
                 .map(ComputadoraResponseDTO::new)
                 .toList();
@@ -67,7 +90,7 @@ public class ComputadoraService {
     @Transactional(readOnly = true)
     public ComputadoraResponseDTO buscarPorSerie(String serie) {
         Computadora computadora = computadoraRepository
-                .findBySerieWithFuncionario(serie)
+                .findBySerieWithFuncionario(serie != null ? serie.trim() : "")
                 .orElseThrow(() ->
                         new RecursoNoEncontradoException(
                                 "Computadora no encontrada con serie: " + serie
@@ -82,10 +105,16 @@ public class ComputadoraService {
 
     @Transactional
     public ComputadoraResponseDTO guardar(ComputadoraRequestDTO datos) {
+        if (datos.getSerie() != null) {
+            computadoraRepository.findBySerie(datos.getSerie().trim()).ifPresent(c -> {
+                throw new IllegalArgumentException("Ya existe una computadora registrada con la serie: " + datos.getSerie());
+            });
+        }
+
         Computadora computadora = new Computadora();
         cargarDatosComputadora(computadora, datos);
 
-        Funcionario funcionario = buscarFuncionarioOpcional(datos.getCedulaFuncionario());
+        Funcionario funcionario = buscarFuncionarioOpcional(datos.getFuncionarioId(), datos.getCedulaFuncionario());
         if (funcionario != null) {
             validarFuncionarioActivo(funcionario);
         }
@@ -114,8 +143,16 @@ public class ComputadoraService {
                         )
                 );
 
+        if (datos.getSerie() != null) {
+            computadoraRepository.findBySerie(datos.getSerie().trim()).ifPresent(existente -> {
+                if (!existente.getId().equals(id)) {
+                    throw new IllegalArgumentException("Ya existe otra computadora con la serie: " + datos.getSerie());
+                }
+            });
+        }
+
         Funcionario funcionarioAnterior = computadora.getFuncionario();
-        Funcionario nuevoFuncionario = buscarFuncionarioOpcional(datos.getCedulaFuncionario());
+        Funcionario nuevoFuncionario = buscarFuncionarioOpcional(datos.getFuncionarioId(), datos.getCedulaFuncionario());
 
         if (nuevoFuncionario != null) {
             validarFuncionarioActivo(nuevoFuncionario);
@@ -157,7 +194,7 @@ public class ComputadoraService {
         }
 
         Funcionario nuevoFuncionario = funcionarioRepository
-                .findByCedula(cedulaFuncionario)
+                .findByCedula(cedulaFuncionario.trim())
                 .orElseThrow(() ->
                         new RecursoNoEncontradoException("Funcionario no encontrado")
                 );
@@ -253,7 +290,12 @@ public class ComputadoraService {
     // BUSCAR FUNCIONARIO OPCIONAL
     // =========================================================
 
-    private Funcionario buscarFuncionarioOpcional(String cedula) {
+    private Funcionario buscarFuncionarioOpcional(Long funcionarioId, String cedula) {
+        if (funcionarioId != null) {
+            return funcionarioRepository.findById(funcionarioId)
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Funcionario no encontrado con ID: " + funcionarioId));
+        }
+
         if (cedula == null || cedula.isBlank()) {
             return null;
         }
@@ -284,21 +326,32 @@ public class ComputadoraService {
     // =========================================================
 
     private void cargarDatosComputadora(Computadora computadora, ComputadoraRequestDTO datos) {
-        computadora.setSerie(datos.getSerie());
-        computadora.setNombreEquipo(datos.getNombreEquipo());
-        computadora.setProcedencia(datos.getProcedencia());
-        computadora.setTipo(datos.getTipo());
-        computadora.setMarca(datos.getMarca());
-        computadora.setModelo(datos.getModelo());
-        computadora.setTipoProcesador(datos.getTipoProcesador());
-        computadora.setGeneracionProcesador(datos.getGeneracionProcesador());
-        computadora.setVelocidadProcesador(datos.getVelocidadProcesador());
-        computadora.setMemoriaRAM(datos.getMemoriaRAM());
-        computadora.setTipoDisco(datos.getTipoDisco());
+        computadora.setSerie(datos.getSerie() != null ? datos.getSerie().trim() : null);
+        computadora.setNombreEquipo(datos.getNombreEquipo() != null ? datos.getNombreEquipo().trim() : null);
+        computadora.setProcedencia(datos.getProcedencia() != null && !datos.getProcedencia().isBlank() ? datos.getProcedencia().trim() : "Institucional");
+        computadora.setTipo(datos.getTipo() != null ? datos.getTipo().trim() : null);
+        computadora.setMarca(datos.getMarca() != null ? datos.getMarca().trim() : null);
+        computadora.setModelo(datos.getModelo() != null ? datos.getModelo().trim() : null);
+        computadora.setTipoProcesador(datos.getTipoProcesador() != null ? datos.getTipoProcesador().trim() : null);
+        computadora.setGeneracionProcesador(datos.getGeneracionProcesador() != null ? datos.getGeneracionProcesador().trim() : null);
+        computadora.setVelocidadProcesador(datos.getVelocidadProcesador() != null && !datos.getVelocidadProcesador().isBlank() ? datos.getVelocidadProcesador().trim() : "N/A");
+        computadora.setMemoriaRAM(datos.getMemoriaRAM() != null ? datos.getMemoriaRAM().trim() : null);
+        computadora.setTipoDisco(datos.getTipoDisco() != null ? datos.getTipoDisco().trim() : null);
         computadora.setCapacidadDiscoGB(datos.getCapacidadDiscoGB());
-        computadora.setSistemaOperativo(datos.getSistemaOperativo());
-        computadora.setOffice(datos.getOffice());
-        computadora.setUbicacion(datos.getUbicacion());
-        computadora.setEstado(datos.getEstado());
+        computadora.setSistemaOperativo(datos.getSistemaOperativo() != null ? datos.getSistemaOperativo().trim() : null);
+        
+        String ofimatica = datos.getOffice() != null && !datos.getOffice().isBlank() ? datos.getOffice().trim() : datos.getOfimatica();
+        computadora.setOffice(ofimatica);
+        computadora.setAntivirus(datos.getAntivirus() != null ? datos.getAntivirus().trim() : null);
+        computadora.setObservacionSoftware(datos.getObservacionSoftware());
+
+        computadora.setIp(datos.getIp() != null ? datos.getIp().trim() : null);
+        computadora.setMacLan(datos.getMacLan() != null ? datos.getMacLan().trim() : null);
+        computadora.setMacWifi(datos.getMacWifi() != null ? datos.getMacWifi().trim() : null);
+        computadora.setNroPR(datos.getNroPR() != null ? datos.getNroPR().trim() : null);
+        computadora.setObservacionRed(datos.getObservacionRed());
+
+        computadora.setUbicacion(datos.getUbicacion() != null ? datos.getUbicacion().trim() : null);
+        computadora.setEstado(datos.getEstado() != null ? datos.getEstado().trim() : null);
     }
 }

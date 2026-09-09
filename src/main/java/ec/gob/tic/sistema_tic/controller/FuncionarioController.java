@@ -17,54 +17,46 @@ public class FuncionarioController {
 
     private final FuncionarioService funcionarioService;
 
-    public FuncionarioController(
-            FuncionarioService funcionarioService) {
-
+    public FuncionarioController(FuncionarioService funcionarioService) {
         this.funcionarioService = funcionarioService;
     }
 
-
     // =========================
-    // LISTAR TODOS
+    // LISTAR TODOS / BUSCAR
     // =========================
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping
-    public ResponseEntity<List<FuncionarioResponseDTO>> listarTodos() {
+    public ResponseEntity<List<FuncionarioResponseDTO>> listar(
+            @RequestParam(value = "buscar", required = false) String buscar,
+            @RequestParam(value = "cedula", required = false) String cedula) {
 
-        return ResponseEntity.ok(
-                funcionarioService.listarTodos()
-        );
+        if (cedula != null && !cedula.isBlank()) {
+            return ResponseEntity.ok(funcionarioService.buscar(cedula));
+        }
+        if (buscar != null && !buscar.isBlank()) {
+            return ResponseEntity.ok(funcionarioService.buscar(buscar));
+        }
+        return ResponseEntity.ok(funcionarioService.listarTodos());
     }
-
 
     // =========================
     // BUSCAR POR ID
     // =========================
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping("/{id}")
-    public ResponseEntity<FuncionarioResponseDTO> buscarPorId(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                funcionarioService.buscarPorId(id)
-        );
+    public ResponseEntity<FuncionarioResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(funcionarioService.buscarPorId(id));
     }
-
 
     // =========================
     // BUSCAR POR CÉDULA
     // =========================
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping("/cedula/{cedula}")
-    public ResponseEntity<FuncionarioResponseDTO> buscarPorCedula(
-            @PathVariable String cedula) {
-
-        return ResponseEntity.ok(
-                funcionarioService.buscarPorCedula(cedula)
-        );
+    public ResponseEntity<FuncionarioResponseDTO> buscarPorCedula(@PathVariable String cedula) {
+        return ResponseEntity.ok(funcionarioService.buscarPorCedula(cedula));
     }
-
 
     // =========================
     // CREAR
@@ -76,14 +68,9 @@ public class FuncionarioController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @PostMapping
-    public ResponseEntity<FuncionarioResponseDTO> crear(
-            @Valid @RequestBody FuncionarioRequestDTO datos) {
-
-        return ResponseEntity.ok(
-                funcionarioService.guardar(datos)
-        );
+    public ResponseEntity<FuncionarioResponseDTO> crear(@Valid @RequestBody FuncionarioRequestDTO datos) {
+        return ResponseEntity.ok(funcionarioService.guardar(datos));
     }
-
 
     // =========================
     // ACTUALIZAR
@@ -99,11 +86,8 @@ public class FuncionarioController {
             @PathVariable Long id,
             @Valid @RequestBody FuncionarioRequestDTO datos) {
 
-        return ResponseEntity.ok(
-                funcionarioService.actualizar(id, datos)
-        );
+        return ResponseEntity.ok(funcionarioService.actualizar(id, datos));
     }
-
 
     // =========================
     // ELIMINAR
@@ -115,11 +99,8 @@ public class FuncionarioController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id) {
-
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         funcionarioService.eliminar(id);
-
         return ResponseEntity.noContent().build();
     }
 }

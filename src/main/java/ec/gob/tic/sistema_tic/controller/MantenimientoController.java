@@ -3,7 +3,6 @@ package ec.gob.tic.sistema_tic.controller;
 import ec.gob.tic.sistema_tic.audit.Auditable;
 import ec.gob.tic.sistema_tic.dto.MantenimientoRequestDTO;
 import ec.gob.tic.sistema_tic.dto.MantenimientoResponseDTO;
-import ec.gob.tic.sistema_tic.entity.Mantenimiento;
 import ec.gob.tic.sistema_tic.service.MantenimientoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -18,30 +17,28 @@ public class MantenimientoController {
 
     private final MantenimientoService mantenimientoService;
 
-    public MantenimientoController(
-            MantenimientoService mantenimientoService) {
-
+    public MantenimientoController(MantenimientoService mantenimientoService) {
         this.mantenimientoService = mantenimientoService;
     }
 
     // GET /api/mantenimientos
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping
-    public ResponseEntity<List<MantenimientoResponseDTO>> listarTodos() {
+    public ResponseEntity<List<MantenimientoResponseDTO>> listar(
+            @RequestParam(value = "serie", required = false) String serie,
+            @RequestParam(value = "cedula", required = false) String cedula) {
 
-        return ResponseEntity.ok(
-                mantenimientoService.listarTodos()
-        );
+        if ((serie != null && !serie.isBlank()) || (cedula != null && !cedula.isBlank())) {
+            return ResponseEntity.ok(mantenimientoService.buscar(serie, cedula));
+        }
+        return ResponseEntity.ok(mantenimientoService.listarTodos());
     }
 
     // GET /api/mantenimientos/1
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @GetMapping("/{id}")
-    public ResponseEntity<MantenimientoResponseDTO> buscarPorId(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(mantenimientoService.buscarPorId(id)
-        );
+    public ResponseEntity<MantenimientoResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(mantenimientoService.buscarPorId(id));
     }
 
     // POST /api/mantenimientos
@@ -52,15 +49,11 @@ public class MantenimientoController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @PostMapping
-    public ResponseEntity<MantenimientoResponseDTO> crear(
-            @Valid @RequestBody MantenimientoRequestDTO datos) {
-
-        return ResponseEntity.ok(
-                mantenimientoService.guardar(datos)
-        );
+    public ResponseEntity<MantenimientoResponseDTO> crear(@Valid @RequestBody MantenimientoRequestDTO datos) {
+        return ResponseEntity.ok(mantenimientoService.guardar(datos));
     }
 
-    //PUT /api/mantenimientos
+    // PUT /api/mantenimientos/1
     @Auditable(
             modulo = "MANTENIMIENTOS",
             accion = "ACTUALIZAR",
@@ -68,26 +61,22 @@ public class MantenimientoController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
     @PutMapping("/{id}")
-    public ResponseEntity<MantenimientoResponseDTO> actualizar
-            (@PathVariable Long id,
-             @Valid @RequestBody MantenimientoRequestDTO datos)
-    {
+    public ResponseEntity<MantenimientoResponseDTO> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody MantenimientoRequestDTO datos) {
         return ResponseEntity.ok(mantenimientoService.actualizar(id, datos));
     }
 
-    //Delete
+    // DELETE /api/mantenimientos/1
     @Auditable(
             modulo = "MANTENIMIENTOS",
             accion = "ELIMINAR",
             descripcion = "Eliminó un mantenimiento"
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id)
-    {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         mantenimientoService.eliminar(id);
         return ResponseEntity.noContent().build();
-
     }
 }

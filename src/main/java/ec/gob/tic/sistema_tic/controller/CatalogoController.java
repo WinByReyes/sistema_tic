@@ -19,178 +19,133 @@ public class CatalogoController {
 
     private final CatalogoService catalogoService;
 
-
-    public CatalogoController(
-            CatalogoService catalogoService) {
-
-        this.catalogoService =
-                catalogoService;
+    public CatalogoController(CatalogoService catalogoService) {
+        this.catalogoService = catalogoService;
     }
-
 
     // ==========================================
     // LISTAR ACTIVOS
-    //
-    // Ejemplo:
-    // /api/catalogos/activos/MARCA
     // ==========================================
 
-    @PreAuthorize(
-            "hasAnyRole('ADMIN','TECNICO')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @GetMapping("/activos/{tipo}")
-    public ResponseEntity<List<Catalogo>>
-    listarActivos(
-            @PathVariable String tipo) {
+    public ResponseEntity<List<Catalogo>> listarActivos(
+            @PathVariable String tipo
+    ) {
 
         return ResponseEntity.ok(
-                catalogoService.listarActivos(
-                        tipo
-                )
+                catalogoService.listarActivos(tipo)
         );
     }
-
 
     // ==========================================
     // LISTAR TODOS
-    // SOLO ADMIN
     // ==========================================
 
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @GetMapping("/{tipo}")
-    public ResponseEntity<List<Catalogo>>
-    listarTodos(
-            @PathVariable String tipo) {
+    public ResponseEntity<List<Catalogo>> listarTodos(
+            @PathVariable String tipo
+    ) {
 
         return ResponseEntity.ok(
-                catalogoService.listarTodos(
-                        tipo
-                )
+                catalogoService.listarTodos(tipo)
         );
     }
 
-
     // ==========================================
-    // BUSCAR
+    // BUSCAR POR ID
     // ==========================================
 
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @GetMapping("/id/{id}")
-    public ResponseEntity<Catalogo>
-    buscarPorId(
-            @PathVariable Long id) {
+    public ResponseEntity<Catalogo> buscarPorId(
+            @PathVariable Long id
+    ) {
 
         return ResponseEntity.ok(
-                catalogoService.buscarPorId(
-                        id
-                )
+                catalogoService.buscarPorId(id)
         );
     }
-
 
     // ==========================================
     // CREAR
     // ==========================================
+
     @Auditable(
             modulo = "CATALOGOS",
             accion = "CREAR",
             descripcion = "Creó un valor de catálogo"
     )
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @PostMapping
-    public ResponseEntity<Catalogo>
-    crear(
-            @Valid @RequestBody
-            CatalogoRequestDTO datos) {
+    public ResponseEntity<Catalogo> crear(
+            @Valid @RequestBody CatalogoRequestDTO datos
+    ) {
 
         return ResponseEntity.ok(
-                catalogoService.crear(
-                        datos
-                )
+                catalogoService.crear(datos)
         );
     }
-
 
     // ==========================================
     // ACTUALIZAR
     // ==========================================
+
     @Auditable(
             modulo = "CATALOGOS",
             accion = "ACTUALIZAR",
             descripcion = "Actualizó un valor de catálogo"
     )
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @PutMapping("/{id}")
-    public ResponseEntity<Catalogo>
-    actualizar(
+    public ResponseEntity<Catalogo> actualizar(
             @PathVariable Long id,
-
-            @Valid @RequestBody
-            CatalogoRequestDTO datos) {
+            @Valid @RequestBody CatalogoRequestDTO datos
+    ) {
 
         return ResponseEntity.ok(
-                catalogoService.actualizar(
-                        id,
-                        datos
-                )
+                catalogoService.actualizar(id, datos)
         );
     }
-
 
     // ==========================================
     // DESACTIVAR
     // ==========================================
+
     @Auditable(
             modulo = "CATALOGOS",
             accion = "DESACTIVAR",
             descripcion = "Desactivó un valor de catálogo"
     )
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @PatchMapping("/{id}/desactivar")
-    public ResponseEntity<Void>
-    desactivar(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> desactivar(
+            @PathVariable Long id
+    ) {
 
-        catalogoService.desactivar(
-                id
-        );
+        catalogoService.desactivar(id);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
-
 
     // ==========================================
     // ACTIVAR
     // ==========================================
+
     @Auditable(
             modulo = "CATALOGOS",
             accion = "ACTIVAR",
             descripcion = "Activó un valor de catálogo"
     )
-    @PreAuthorize(
-            "hasRole('ADMIN')"
-    )
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     @PatchMapping("/{id}/activar")
-    public ResponseEntity<Void>
-    activar(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> activar(
+            @PathVariable Long id
+    ) {
 
-        catalogoService.activar(
-                id
-        );
+        catalogoService.activar(id);
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }
