@@ -322,7 +322,11 @@ function mostrarDetallesComputadora(pc) {
 async function cargarMantenimientos(url = "/api/mantenimientos") {
     try {
         const respuesta = await apiFetch(url);
-        if (!respuesta || !respuesta.ok) throw new Error("No se pudieron cargar los mantenimientos");
+        if (!respuesta || !respuesta.ok) {
+            const mensaje = await obtenerMensajeError(respuesta, "Error al cargar la lista de mantenimientos");
+            alert(mensaje);
+            return;
+        }
 
         const mantenimientos = await respuesta.json();
         renderizarTablaMantenimientos(mantenimientos);

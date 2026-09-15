@@ -197,7 +197,11 @@ function alSeleccionarFuncionario() {
 async function cargarComputadoras(url = "/api/computadoras") {
     try {
         const respuesta = await apiFetch(url);
-        if (!respuesta || !respuesta.ok) throw new Error("No se pudieron cargar las computadoras");
+        if (!respuesta || !respuesta.ok) {
+            const mensaje = await obtenerMensajeError(respuesta, "Error al cargar la lista de computadoras");
+            alert(mensaje);
+            return;
+        }
 
         const computadoras = await respuesta.json();
         renderizarTablaComputadoras(computadoras);

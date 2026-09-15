@@ -213,6 +213,25 @@ public class ConsultaService {
         if (tieneCedula) {
 
 
+            if (funcionarioRepository
+
+                    .findByCedulaContainingIgnoreCase(
+                            cedula.trim()
+                    )
+
+                    .isEmpty()) {
+
+                throw new RecursoNoEncontradoException(
+
+                        "No existe un funcionario " +
+                                "con la cédula: " +
+                                cedula.trim()
+
+                );
+
+            }
+
+
             String serieFiltro =
                     tieneSerie
                             ? serie.trim()

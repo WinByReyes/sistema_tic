@@ -53,10 +53,23 @@ public class ComputadoraService {
             return listarTodas();
         }
 
+        validarExisteFuncionario(cedulaParam);
+
         return computadoraRepository.buscarPorSerieYCedula(serieParam, cedulaParam)
                 .stream()
                 .map(ComputadoraResponseDTO::new)
                 .toList();
+    }
+
+    private void validarExisteFuncionario(String cedula) {
+        if (cedula == null) {
+            return;
+        }
+        if (funcionarioRepository.findByCedulaContainingIgnoreCase(cedula).isEmpty()) {
+            throw new RecursoNoEncontradoException(
+                    "No existe un funcionario con la cédula: " + cedula
+            );
+        }
     }
 
     @Transactional(readOnly = true)

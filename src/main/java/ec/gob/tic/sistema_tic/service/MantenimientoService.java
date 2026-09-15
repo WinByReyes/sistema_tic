@@ -7,6 +7,7 @@ import ec.gob.tic.sistema_tic.entity.Mantenimiento;
 import ec.gob.tic.sistema_tic.entity.Usuario;
 import ec.gob.tic.sistema_tic.exception.RecursoNoEncontradoException;
 import ec.gob.tic.sistema_tic.repository.ComputadoraRepository;
+import ec.gob.tic.sistema_tic.repository.FuncionarioRepository;
 import ec.gob.tic.sistema_tic.repository.MantenimientoRepository;
 import ec.gob.tic.sistema_tic.repository.UsuarioRepository;
 import ec.gob.tic.sistema_tic.util.TextoUtil;
@@ -26,17 +27,20 @@ public class MantenimientoService {
     private final ComputadoraRepository computadoraRepository;
     private final UsuarioRepository usuarioRepository;
     private final CatalogoService catalogoService;
+    private final FuncionarioRepository funcionarioRepository;
 
     public MantenimientoService(
             MantenimientoRepository mantenimientoRepository,
             ComputadoraRepository computadoraRepository,
             UsuarioRepository usuarioRepository,
-            CatalogoService catalogoService
+            CatalogoService catalogoService,
+            FuncionarioRepository funcionarioRepository
     ) {
         this.mantenimientoRepository = mantenimientoRepository;
         this.computadoraRepository = computadoraRepository;
         this.usuarioRepository = usuarioRepository;
         this.catalogoService = catalogoService;
+        this.funcionarioRepository = funcionarioRepository;
     }
 
     // ==========================================
@@ -145,10 +149,23 @@ public class MantenimientoService {
         String serieParam = (serie != null && !serie.trim().isEmpty()) ? serie.trim() : null;
         String cedulaParam = (cedula != null && !cedula.trim().isEmpty()) ? cedula.trim() : null;
 
+        validarExisteFuncionario(cedulaParam);
+
         return mantenimientoRepository.buscarPorSerieYCedula(serieParam, cedulaParam)
                 .stream()
                 .map(MantenimientoResponseDTO::new)
                 .toList();
+    }
+
+    private void validarExisteFuncionario(String cedula) {
+        if (cedula == null) {
+            return;
+        }
+        if (funcionarioRepository.findByCedulaContainingIgnoreCase(cedula).isEmpty()) {
+            throw new RecursoNoEncontradoException(
+                    "No existe un funcionario con la cédula: " + cedula
+            );
+        }
     }
 
     @Transactional(readOnly = true)
