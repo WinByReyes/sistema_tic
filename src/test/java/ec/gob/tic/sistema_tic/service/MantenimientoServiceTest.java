@@ -7,6 +7,7 @@ import ec.gob.tic.sistema_tic.entity.Mantenimiento;
 import ec.gob.tic.sistema_tic.entity.Usuario;
 import ec.gob.tic.sistema_tic.repository.CatalogoRepository;
 import ec.gob.tic.sistema_tic.repository.ComputadoraRepository;
+import ec.gob.tic.sistema_tic.repository.FuncionarioRepository;
 import ec.gob.tic.sistema_tic.repository.MantenimientoRepository;
 import ec.gob.tic.sistema_tic.repository.UsuarioRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -41,6 +42,9 @@ class MantenimientoServiceTest {
     private UsuarioRepository usuarioRepository;
 
     @Mock
+    private FuncionarioRepository funcionarioRepository;
+
+    @Mock
     private CatalogoRepository catalogoRepository;
 
     private CatalogoService catalogoService;
@@ -56,7 +60,8 @@ class MantenimientoServiceTest {
                 mantenimientoRepository,
                 computadoraRepository,
                 usuarioRepository,
-                catalogoService
+                catalogoService,
+                funcionarioRepository
         );
 
         computadora = new Computadora();
