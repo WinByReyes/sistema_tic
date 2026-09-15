@@ -122,8 +122,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespuestaError> manejarErrorInesperado(Exception ex) {
         LOGGER.error("Error no controlado al procesar una solicitud", ex);
+
+        String causa = ex.getMessage();
+        Throwable raiz = ex.getCause() != null ? ex.getCause() : ex;
+        if (raiz != raiz.getCause() && raiz.getCause() != null) {
+            causa = raiz.getCause().getMessage() != null
+                    ? raiz.getCause().getMessage() : causa;
+        }
+        if (causa == null || causa.isBlank()) {
+            causa = ex.getClass().getSimpleName();
+        }
+
         return respuesta(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno",
-                "Ocurrió un error inesperado. Intente nuevamente o contacte al administrador.");
+                "Ocurrió un error inesperado. Detalle: " + causa);
     }
 
     private ResponseEntity<RespuestaError> respuesta(HttpStatus estado, String error, String mensaje) {

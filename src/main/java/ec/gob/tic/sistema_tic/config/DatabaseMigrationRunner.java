@@ -15,8 +15,15 @@ import java.util.List;
  * sin depender de Flyway/Liquibase ni de ejecutar scripts a mano en cada
  * ambiente (local, Render, Supabase, etc.).
  *
- * <p>Todas las migraciones deben ser idempotentes y seguras: si ya se
- * aplicaron, no hacen nada.
+ * <p>El perfil de producción usa {@code spring.jpa.hibernate.ddl-auto=update},
+ * pero Hibernate NO puede agregar columnas {@code NOT NULL} sobre tablas que ya
+ * contienen filas: la sentencia {@code ALTER TABLE ... ADD COLUMN ... NOT NULL}
+ * falla, Hibernate lo registra y continúa, y luego las consultas que referencia
+ * esas columnas terminan en error 500 ("column X does not exist").
+ *
+ * <p>Por eso aquí se replican las migraciones V2, V3 y V4 de forma idempotente
+ * y resiliente: cada sentencia se ejecuta por separado y un fallo no detiene las
+ * demás. Si ya están aplicadas, no hacen nada.
  */
 @Component
 @ConditionalOnProperty(name = "app.migraciones.auto", havingValue = "true", matchIfMissing = true)
@@ -32,7 +39,68 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        ejecutarSentenciasMigracionV2V3();
         eliminarCheckTipoMantenimiento();
+    }
+
+    /**
+     * V2 y V3: garantiza que existan las columnas que exigen las entidades JPA
+     * y que no tengan valores NULL, para que las consultas no fallen.
+     */
+    private void ejecutarSentenciasMigracionV2V3() {
+        List<String> sentencias = List.of(
+                // ---- V2: mantmiento.responsable ----
+                "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS responsable VARCHAR(150)",
+                "UPDATE mantenimiento SET responsable = responsable_manual " +
+                        "WHERE responsable IS NULL AND responsable_manual IS NOT NULL " +
+                        "AND TRIM(responsable_manual) <> ''",
+                "UPDATE mantenimiento SET responsable = 'Responsable asignado' WHERE responsable IS NULL",
+                "ALTER TABLE mantenimiento ALTER COLUMN responsable SET NOT NULL",
+
+                // ---- V2: limpiar columnas obsoletas ----
+                "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS estado_anterior",
+                "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS responsable_manual",
+                "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS responsable_id",
+
+                // ---- Otras columnas de mantenmiento que la entidad exige ----
+                "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS fecha_mantenimiento TIMESTAMP",
+                "UPDATE mantenimiento SET fecha_mantenimiento = COALESCE(fecha_hora, now()) " +
+                        "WHERE fecha_mantenimiento IS NULL",
+                "ALTER TABLE mantenimiento ALTER COLUMN fecha_mantenimiento SET NOT NULL",
+
+                "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS estado_mantenimiento VARCHAR(100)",
+                "UPDATE mantenimiento SET estado_mantenimiento = 'Finalizado' WHERE estado_mantenimiento IS NULL",
+                "ALTER TABLE mantenimiento ALTER COLUMN estado_mantenimiento SET NOT NULL",
+
+                "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS estado_posterior VARCHAR(50)",
+                "UPDATE mantenimiento SET estado_posterior = 'OPERATIVO' WHERE estado_posterior IS NULL",
+                "ALTER TABLE mantenimiento ALTER COLUMN estado_posterior SET NOT NULL",
+
+                "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS observaciones TEXT",
+                "UPDATE mantenimiento SET observaciones = 'Sin observaciones' " +
+                        "WHERE observaciones IS NULL OR TRIM(observaciones) = ''",
+                "ALTER TABLE mantenimiento ALTER COLUMN observaciones SET NOT NULL",
+
+                // ---- V3: funcionarios.nombres y apellidos ----
+                "ALTER TABLE funcionarios ADD COLUMN IF NOT EXISTS nombres VARCHAR(150)",
+                "UPDATE funcionarios SET nombres = nombre_pila " +
+                        "WHERE (nombres IS NULL OR TRIM(nombres) = '') " +
+                        "AND nombre_pila IS NOT NULL AND TRIM(nombre_pila) <> ''",
+                "UPDATE funcionarios SET nombres = '' WHERE nombres IS NULL",
+                "ALTER TABLE funcionarios ALTER COLUMN nombres SET NOT NULL",
+
+                "ALTER TABLE funcionarios ADD COLUMN IF NOT EXISTS apellidos VARCHAR(150)",
+                "UPDATE funcionarios SET apellidos = '' WHERE apellidos IS NULL",
+                "ALTER TABLE funcionarios ALTER COLUMN apellidos SET NOT NULL"
+        );
+
+        for (String sql : sentencias) {
+            try {
+                jdbcTemplate.execute(sql);
+            } catch (Exception ex) {
+                log.warn("Migración V2/V3: sentencia omitida ({}): {}", ex.getMessage(), sql);
+            }
+        }
     }
 
     /**
