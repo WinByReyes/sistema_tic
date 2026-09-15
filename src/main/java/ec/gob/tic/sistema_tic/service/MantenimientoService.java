@@ -60,6 +60,9 @@ public class MantenimientoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("La computadora indicada no existe"));
 
         Usuario usuarioAutenticado = obtenerUsuarioAutenticado();
+        if (usuarioAutenticado == null) {
+            throw new IllegalStateException("No se pudo identificar al usuario autenticado. Inicie sesión nuevamente.");
+        }
 
         Mantenimiento mantenimiento = new Mantenimiento();
         mantenimiento.setComputadora(computadora);
@@ -70,7 +73,11 @@ public class MantenimientoService {
                         : LocalDateTime.now()
         );
         mantenimiento.setTipoMantenimiento(datos.getTipoMantenimiento());
-        mantenimiento.setEstadoMantenimiento(datos.getEstadoMantenimiento());
+        mantenimiento.setEstadoMantenimiento(
+                datos.getEstadoMantenimiento() != null && !datos.getEstadoMantenimiento().trim().isEmpty()
+                        ? datos.getEstadoMantenimiento()
+                        : "Finalizado"
+        );
         mantenimiento.setResponsable(datos.getResponsable());
         mantenimiento.setDiagnostico(TextoUtil.limpiar(datos.getDiagnostico()));
         mantenimiento.setTrabajoRealizado(TextoUtil.limpiar(datos.getTrabajoRealizado()));
@@ -86,7 +93,10 @@ public class MantenimientoService {
             computadoraRepository.save(computadora);
         }
 
-        mantenimiento.setObservaciones(TextoUtil.limpiar(datos.getObservaciones()));
+        String observaciones = TextoUtil.limpiar(datos.getObservaciones());
+        mantenimiento.setObservaciones(
+                observaciones != null && !observaciones.isEmpty() ? observaciones : "Sin observaciones"
+        );
 
         Mantenimiento guardado = mantenimientoRepository.save(mantenimiento);
         return new MantenimientoResponseDTO(guardado);
@@ -111,11 +121,15 @@ public class MantenimientoService {
             mantenimiento.setFechaMantenimiento(datos.getFechaMantenimiento());
         }
         mantenimiento.setTipoMantenimiento(datos.getTipoMantenimiento());
-        mantenimiento.setEstadoMantenimiento(datos.getEstadoMantenimiento());
+        if (datos.getEstadoMantenimiento() != null && !datos.getEstadoMantenimiento().trim().isEmpty()) {
+            mantenimiento.setEstadoMantenimiento(datos.getEstadoMantenimiento());
+        }
         mantenimiento.setResponsable(datos.getResponsable());
         mantenimiento.setDiagnostico(TextoUtil.limpiar(datos.getDiagnostico()));
         mantenimiento.setTrabajoRealizado(TextoUtil.limpiar(datos.getTrabajoRealizado()));
-        mantenimiento.setCosto(datos.getCosto() != null ? datos.getCosto() : BigDecimal.ZERO);
+        if (datos.getCosto() != null) {
+            mantenimiento.setCosto(datos.getCosto());
+        }
 
         mantenimiento.setEstadoPosterior(datos.getEstadoPosterior());
 
@@ -125,7 +139,10 @@ public class MantenimientoService {
             computadoraRepository.save(computadora);
         }
 
-        mantenimiento.setObservaciones(TextoUtil.limpiar(datos.getObservaciones()));
+        String observaciones = TextoUtil.limpiar(datos.getObservaciones());
+        if (observaciones != null && !observaciones.isEmpty()) {
+            mantenimiento.setObservaciones(observaciones);
+        }
 
         Mantenimiento guardado = mantenimientoRepository.save(mantenimiento);
         return new MantenimientoResponseDTO(guardado);

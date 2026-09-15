@@ -83,6 +83,21 @@
         .resultado-computadora {
             margin-bottom: 24px;
         }
+        .modal-content.detalle-mantenimiento {
+            max-width: 900px;
+            max-height: 86vh;
+            overflow-y: auto;
+        }
+        .detalle-mantenimiento .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 18px;
+        }
+        @media (max-width: 768px) {
+            .detalle-mantenimiento .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -378,6 +393,19 @@
     <!-- MENSAJES -->
     <div id="mensajeConsulta" class="panel" style="display:none;"></div>
 </main>
+
+<!-- MODAL DETALLE DE MANTENIMIENTO -->
+<div id="modalDetalleMantenimiento" class="modal" onclick="if(event.target===this)cerrarDetalleMantenimiento()">
+    <div class="modal-content detalle-mantenimiento">
+        <div class="panel-header" style="margin-bottom: 12px;">
+            <h2>Detalle del Mantenimiento</h2>
+            <button type="button" class="btn btn-secondary" onclick="cerrarDetalleMantenimiento()">✖ Cerrar</button>
+        </div>
+        <div id="contenidoDetalleMantenimiento">
+            <!-- Dinámico -->
+        </div>
+    </div>
+</div>
 
 <script src="/js/api.js"></script>
 <script src="/js/consultas.js"></script>

@@ -85,7 +85,6 @@ async function cargarTodosLosCatalogos() {
     await Promise.all([
         cargarCatalogo("RESPONSABLE_MANTENIMIENTO", "responsable", "Seleccione el responsable", "Responsable asignado"),
         cargarCatalogo("TIPO_MANTENIMIENTO", "tipoMantenimiento", "Seleccione el tipo de mantenimiento"),
-        cargarCatalogo("ESTADO_MANTENIMIENTO", "estadoMantenimiento", "Seleccione el estado del mantenimiento"),
         cargarCatalogo("ESTADO_POSTERIOR_COMPUTADORA", "estadoPosterior", "Seleccione el estado resultante")
     ]);
 }
@@ -435,7 +434,6 @@ async function abrirFormulario() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById("fechaMantenimiento").value = now.toISOString().slice(0, 16);
-    document.getElementById("costo").value = "0.00";
 
     const inputFuncionario = document.getElementById("selectFuncionario");
     if (inputFuncionario) inputFuncionario.value = "";
@@ -487,15 +485,13 @@ document.getElementById("mantenimientoForm")?.addEventListener("submit", async f
 
     const responsable = document.getElementById("responsable").value.trim() || "Responsable asignado";
     const tipoMantenimiento = document.getElementById("tipoMantenimiento").value;
-    const estadoMantenimiento = document.getElementById("estadoMantenimiento").value;
     const estadoPosterior = document.getElementById("estadoPosterior").value;
     const fechaMantenimiento = document.getElementById("fechaMantenimiento").value;
     const diagnostico = document.getElementById("diagnostico").value.trim();
     const trabajoRealizado = document.getElementById("trabajoRealizado").value.trim();
-    const costo = document.getElementById("costo").value || "0.00";
     const observaciones = document.getElementById("observaciones").value.trim();
 
-    if (!tipoMantenimiento || !estadoMantenimiento || !estadoPosterior || !diagnostico || !trabajoRealizado) {
+    if (!tipoMantenimiento || !estadoPosterior || !diagnostico || !trabajoRealizado) {
         alert("Por favor complete todos los campos obligatorios marcados con asterisco (*).");
         return;
     }
@@ -505,11 +501,9 @@ document.getElementById("mantenimientoForm")?.addEventListener("submit", async f
         responsable: responsable,
         fechaMantenimiento,
         tipoMantenimiento,
-        estadoMantenimiento,
         estadoPosterior,
         diagnostico,
         trabajoRealizado,
-        costo: Number(costo),
         observaciones
     };
 
@@ -567,12 +561,10 @@ async function editarMantenimiento(id) {
         }
         document.getElementById("diagnostico").value = m.diagnostico || "";
         document.getElementById("trabajoRealizado").value = m.trabajoRealizado || "";
-        document.getElementById("costo").value = m.costo || "0.00";
         document.getElementById("observaciones").value = m.observaciones || "";
 
         document.getElementById("responsable").value = m.nombreResponsable || "Responsable asignado";
         document.getElementById("tipoMantenimiento").value = m.tipoMantenimiento || "";
-        document.getElementById("estadoMantenimiento").value = m.estadoMantenimiento || "";
         document.getElementById("estadoPosterior").value = m.estadoPosterior || "OPERATIVO";
 
         // Cargar datos de la computadora asociada

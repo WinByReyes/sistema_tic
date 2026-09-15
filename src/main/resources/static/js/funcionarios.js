@@ -359,7 +359,10 @@ async function eliminarFuncionario(id) {
             return;
         }
 
-        alert("Funcionario desactivado correctamente.");
+        alert("Funcionario desactivado correctamente." +
+            "Computadora asignada a este funcionario queda sin asginarse");
+
+
         await cargarFuncionarios();
     } catch (error) {
         console.error(error);

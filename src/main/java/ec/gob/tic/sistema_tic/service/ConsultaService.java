@@ -635,6 +635,67 @@ public class ConsultaService {
         );
 
 
+        dto.setTipoEquipo(
+                mantenimiento
+                        .getComputadora()
+                        .getTipo()
+        );
+
+
+        dto.setMarcaEquipo(
+                mantenimiento
+                        .getComputadora()
+                        .getMarca()
+        );
+
+
+        dto.setModeloEquipo(
+                mantenimiento
+                        .getComputadora()
+                        .getModelo()
+        );
+
+
+        dto.setUbicacionEquipo(
+                mantenimiento
+                        .getComputadora()
+                        .getUbicacion()
+        );
+
+
+        dto.setEstadoActualComputadora(
+                mantenimiento
+                        .getComputadora()
+                        .getEstado()
+        );
+
+
+        if (mantenimiento.getComputadora().getFuncionario() != null) {
+
+            dto.setFuncionarioId(
+                    mantenimiento
+                            .getComputadora()
+                            .getFuncionario()
+                            .getId()
+            );
+
+            dto.setCedulaFuncionario(
+                    mantenimiento
+                            .getComputadora()
+                            .getFuncionario()
+                            .getCedula()
+            );
+
+            dto.setNombreFuncionario(
+                    mantenimiento
+                            .getComputadora()
+                            .getFuncionario()
+                            .getNombrePila()
+            );
+
+        }
+
+
         dto.setUsuarioId(
                 mantenimiento
                         .getUsuario()

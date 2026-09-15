@@ -275,8 +275,10 @@ function renderizarTablaComputadoras(computadoras) {
 async function buscarComputadoras() {
     const cedula = document.getElementById("buscarCedula")?.value.trim();
     const serie = document.getElementById("buscarSerie")?.value.trim();
+    const sinFuncionario = document.getElementById("filtroFuncionario")?.value === "sin";
 
     const params = new URLSearchParams();
+    if (sinFuncionario) params.append("sinFuncionario", "true");
     if (cedula) params.append("cedula", cedula);
     if (serie) params.append("serie", serie);
 
@@ -288,6 +290,7 @@ async function buscarComputadoras() {
 function limpiarBusqueda() {
     if (document.getElementById("buscarCedula")) document.getElementById("buscarCedula").value = "";
     if (document.getElementById("buscarSerie")) document.getElementById("buscarSerie").value = "";
+    if (document.getElementById("filtroFuncionario")) document.getElementById("filtroFuncionario").value = "";
     cargarComputadoras();
 }
 

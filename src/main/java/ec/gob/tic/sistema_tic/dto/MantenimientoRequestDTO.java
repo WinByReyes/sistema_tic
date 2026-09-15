@@ -18,7 +18,6 @@ public class MantenimientoRequestDTO {
     @NotBlank(message = "El tipo de mantenimiento es obligatorio")
     private String tipoMantenimiento;
 
-    @NotBlank(message = "El estado del mantenimiento es obligatorio")
     private String estadoMantenimiento;
 
     @NotBlank(message = "El diagnóstico es obligatorio")
@@ -27,17 +26,11 @@ public class MantenimientoRequestDTO {
     @NotBlank(message = "El trabajo realizado es obligatorio")
     private String trabajoRealizado;
 
-    @NotNull(message = "El costo es obligatorio")
-    @DecimalMin(
-            value = "0.00",
-            message = "El costo no puede ser negativo"
-    )
     private BigDecimal costo;
 
     @NotBlank(message = "El estado posterior es obligatorio")
     private String estadoPosterior;
 
-    @NotBlank(message = "Las observaciones son obligatorias")
     private String observaciones;
 
     @NotNull(message = "La fecha de mantenimiento es obligatoria")

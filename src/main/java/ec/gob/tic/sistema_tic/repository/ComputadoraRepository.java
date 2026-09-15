@@ -13,6 +13,9 @@ public interface ComputadoraRepository extends JpaRepository<Computadora, Long> 
     @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario ORDER BY c.id DESC")
     List<Computadora> findAllWithFuncionario();
 
+    @Query("SELECT c FROM Computadora c WHERE c.funcionario IS NULL ORDER BY c.id DESC")
+    List<Computadora> findSinFuncionario();
+
     @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE c.id = :id")
     Optional<Computadora> findByIdWithFuncionario(@Param("id") Long id);
 

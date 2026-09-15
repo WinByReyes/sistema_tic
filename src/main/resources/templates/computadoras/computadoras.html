@@ -106,6 +106,13 @@
                 <label for="buscarSerie">Buscar por número de serie</label>
                 <input type="text" id="buscarSerie" placeholder="Ej. L34920 o SN-8921">
             </div>
+            <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 0;">
+                <label for="filtroFuncionario">Filtro</label>
+                <select id="filtroFuncionario" onchange="buscarComputadoras()">
+                    <option value="">Todas las computadoras</option>
+                    <option value="sin">Solo sin funcionario asignado</option>
+                </select>
+            </div>
             <div style="display: flex; gap: 8px;">
                 <button type="button" class="btn btn-primary" onclick="buscarComputadoras()">🔍 Buscar</button>
                 <button type="button" class="btn btn-secondary" onclick="limpiarBusqueda()">Limpiar</button>

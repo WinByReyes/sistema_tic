@@ -40,8 +40,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<RespuestaError> manejarDatoDuplicado(
             DataIntegrityViolationException ex) {
-        return respuesta(HttpStatus.CONFLICT, "Conflicto de datos",
-                "El dato que intenta registrar ya existe o viola una restricción de la base de datos.");
+        LOGGER.error("Violación de integridad de datos", ex);
+
+        Throwable raiz = ex.getRootCause();
+        String detalle = raiz != null ? raiz.getMessage() : null;
+        String mensaje = "El dato que intenta registrar ya existe o viola una restricción de la base de datos.";
+
+        if (detalle != null) {
+            String min = detalle.toLowerCase();
+            if (min.contains("check constraint")) {
+                mensaje = "Los valores ingresados no cumplen una regla de validación de la base de datos.";
+            } else if (min.contains("duplicate key") || min.contains("unique constraint")) {
+                mensaje = "El dato que intenta registrar ya existe en la base de datos.";
+            } else if (min.contains("not null")) {
+                mensaje = "Falta un dato obligatorio para registrar la información.";
+            } else if (min.contains("foreign key")) {
+                mensaje = "El registro está relacionado con otro dato que impide la operación.";
+            } else if (min.contains("null value")) {
+                mensaje = "Falta un dato obligatorio para registrar la información.";
+            }
+        }
+
+        return respuesta(HttpStatus.CONFLICT, "Conflicto de datos", mensaje);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -233,6 +233,9 @@ function mostrarMantenimientosFuncionario(mantenimientos) {
                 <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
                 <td class="text-center">
                     <div class="acciones-iconos" style="justify-content: center;">
+                        <button type="button" class="btn-icon btn-icon-info" title="Ver detalle del mantenimiento" aria-label="Ver detalle del mantenimiento" onclick="verDetalleMantenimiento(${jsonAttr(m)})">
+                            👁️
+                        </button>
                         <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar Mantenimiento">
                             ✏️
                         </a>
@@ -335,7 +338,12 @@ function mostrarResultadosComputadoras(resultados) {
                     <td><strong>$${esc(m.costo || 0)}</strong></td>
                     <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
                     <td class="text-center">
-                        <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar">✏️</a>
+                        <div class="acciones-iconos" style="justify-content: center;">
+                            <button type="button" class="btn-icon btn-icon-info" title="Ver detalle del mantenimiento" aria-label="Ver detalle del mantenimiento" onclick="verDetalleMantenimiento(${jsonAttr(m)})">
+                                👁️
+                            </button>
+                            <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar">✏️</a>
+                        </div>
                     </td>
                 </tr>
             `).join("")
@@ -356,16 +364,53 @@ function mostrarResultadosComputadoras(resultados) {
 
                 <!-- ESPECIFICACIONES -->
                 <div class="consulta-section">
-                    <h3>Especificaciones Técnicas</h3>
+                    <h3>📋 1. Datos Generales</h3>
                     <div class="form-grid-cuatro">
-                        <div class="form-group"><label>Procesador</label><span>${esc(pc.tipoProcesador)} ${esc(pc.generacionProcesador || "")}</span></div>
-                        <div class="form-group"><label>Memoria RAM</label><span>${esc(pc.memoriaRAM)}</span></div>
-                        <div class="form-group"><label>Disco</label><span>${esc(pc.tipoDisco)} - ${esc(pc.capacidadDiscoGB)} GB</span></div>
+                        <div class="form-group"><label>Nombre de equipo</label><span><strong>${esc(pc.nombreEquipo)}</strong></span></div>
+                        <div class="form-group"><label>Serie</label><span><strong>${esc(pc.serie)}</strong></span></div>
+                        <div class="form-group"><label>Tipo de equipo</label><span>${esc(pc.tipo)}</span></div>
+                        <div class="form-group"><label>Marca</label><span>${esc(pc.marca)}</span></div>
+                        <div class="form-group"><label>Modelo</label><span>${esc(pc.modelo)}</span></div>
+                        <div class="form-group"><label>Procedencia</label><span>${esc(pc.procedencia || "Institucional")}</span></div>
+                        <div class="form-group"><label>Ubicación</label><span>${esc(pc.ubicacion)}</span></div>
+                        <div class="form-group"><label>Estado</label><span><span class="badge badge-info">${esc(pc.estado || "N/A")}</span></span></div>
+                        <div class="form-group"><label>Funcionario asignado</label><span>${nombreFuncActual ? esc(nombreFuncActual) : 'Sin asignar'}</span></div>
+                        <div class="form-group"><label>Cédula del funcionario</label><span>${actual ? esc(actual.cedula) : "—"}</span></div>
+                        <div class="form-group"><label>Cargo</label><span>${actual ? esc(actual.cargo || "N/A") : "—"}</span></div>
+                        <div class="form-group"><label>Unidad administrativa</label><span>${actual ? esc(actual.unidadAdministrativa || "N/A") : "—"}</span></div>
+                    </div>
+                </div>
+
+                <div class="consulta-section">
+                    <h3>💿 2. Especificación de Software</h3>
+                    <div class="form-grid-cuatro">
                         <div class="form-group"><label>Sistema Operativo</label><span>${esc(pc.sistemaOperativo)}</span></div>
                         <div class="form-group"><label>Ofimática</label><span>${esc(pc.office || "N/A")}</span></div>
                         <div class="form-group"><label>Antivirus</label><span>${esc(pc.antivirus || "N/A")}</span></div>
-                        <div class="form-group"><label>IP / Red</label><span>${esc(pc.ip || "N/A")} (${esc(pc.macLan || "Sin MAC")})</span></div>
-                        <div class="form-group"><label>Ubicación / Estado</label><span>${esc(pc.ubicacion)} — <strong>${esc(pc.estado)}</strong></span></div>
+                        <div class="form-group"><label>Observación (Software)</label><span>${esc(pc.observacionSoftware || "Sin observaciones")}</span></div>
+                    </div>
+                </div>
+
+                <div class="consulta-section">
+                    <h3>🌐 3. Red de Datos</h3>
+                    <div class="form-grid-cuatro">
+                        <div class="form-group"><label>Dirección IP</label><span>${esc(pc.ip || "N/A")}</span></div>
+                        <div class="form-group"><label>MAC LAN</label><span>${esc(pc.macLan || "N/A")}</span></div>
+                        <div class="form-group"><label>MAC WIFI</label><span>${esc(pc.macWifi || "N/A")}</span></div>
+                        <div class="form-group"><label>Nro. P.R.</label><span>${esc(pc.nroPR || "N/A")}</span></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>Observación (Red de datos)</label><span>${esc(pc.observacionRed || "Sin observaciones")}</span></div>
+                    </div>
+                </div>
+
+                <div class="consulta-section">
+                    <h3>💻 4. Especificación de Hardware</h3>
+                    <div class="form-grid-cuatro">
+                        <div class="form-group"><label>Tipo de procesador</label><span>${esc(pc.tipoProcesador)}</span></div>
+                        <div class="form-group"><label>Generación de procesador</label><span>${esc(pc.generacionProcesador || "N/A")}</span></div>
+                        <div class="form-group"><label>Velocidad del procesador</label><span>${esc(pc.velocidadProcesador || "N/A")}</span></div>
+                        <div class="form-group"><label>Memoria RAM</label><span>${esc(pc.memoriaRAM)}</span></div>
+                        <div class="form-group"><label>Tipo de disco</label><span>${esc(pc.tipoDisco)}</span></div>
+                        <div class="form-group"><label>Capacidad de disco</label><span>${esc(pc.capacidadDiscoGB)} GB</span></div>
                     </div>
                 </div>
 
@@ -502,6 +547,9 @@ function mostrarMantenimientosConsulta(mantenimientos) {
                 <td><span class="badge badge-info">${esc(m.estadoPosterior || "N/A")}</span></td>
                 <td class="text-center">
                     <div class="acciones-iconos" style="justify-content: center;">
+                        <button type="button" class="btn-icon btn-icon-info" title="Ver detalle del mantenimiento" aria-label="Ver detalle del mantenimiento" onclick="verDetalleMantenimiento(${jsonAttr(m)})">
+                            👁️
+                        </button>
                         <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar Mantenimiento">
                             ✏️
                         </a>
@@ -554,6 +602,91 @@ function esc(valor) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function jsonAttr(obj) {
+    return JSON.stringify(obj)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+function verDetalleMantenimiento(m) {
+    const contenedor = document.getElementById("contenidoDetalleMantenimiento");
+    if (!contenedor) return;
+
+    const fmt = v => (v === null || v === undefined || v === "") ? "N/A" : esc(v);
+    const formaFecha = v => v ? escaDate(v) : "N/A";
+    const costo = (m.costo === null || m.costo === undefined || m.costo === "")
+        ? "N/A"
+        : `$${Number(m.costo).toFixed(2)}`;
+
+    contenedor.innerHTML = `
+        <div class="consulta-section">
+            <div class="two-col">
+                <div class="form-group"><label>ID</label><span><strong>#${fmt(m.id)}</strong></span></div>
+                <div class="form-group"><label>Tipo de mantenimiento</label><span><strong>${fmt(m.tipoMantenimiento)}</strong></span></div>
+                <div class="form-group"><label>Estado del mantenimiento</label><span><span class="badge badge-info">${fmt(m.estadoMantenimiento)}</span></span></div>
+                <div class="form-group"><label>Costo</label><span><strong>${costo}</strong></span></div>
+                <div class="form-group"><label>Responsable</label><span>${fmt(m.nombreResponsable)}</span></div>
+                <div class="form-group"><label>Estado posterior de la computadora</label><span>${fmt(m.estadoPosterior)}</span></div>
+                <div class="form-group"><label>Observaciones</label><span>${fmt(m.observaciones || "Sin observaciones")}</span></div>
+            </div>
+        </div>
+
+        <div class="consulta-section">
+            <h3>🖥 Computadora</h3>
+            <div class="two-col">
+                <div class="form-group"><label>ID computadora</label><span>${fmt(m.computadoraId)}</span></div>
+                <div class="form-group"><label>Nombre de equipo</label><span><strong>${fmt(m.nombreEquipo)}</strong></span></div>
+                <div class="form-group"><label>Serie</label><span>${fmt(m.serieComputadora)}</span></div>
+                <div class="form-group"><label>Tipo de equipo</label><span>${fmt(m.tipoEquipo)}</span></div>
+                <div class="form-group"><label>Marca</label><span>${fmt(m.marcaEquipo)}</span></div>
+                <div class="form-group"><label>Modelo</label><span>${fmt(m.modeloEquipo)}</span></div>
+                <div class="form-group"><label>Ubicación</label><span>${fmt(m.ubicacionEquipo)}</span></div>
+                <div class="form-group"><label>Estado actual</label><span><span class="badge badge-info">${fmt(m.estadoActualComputadora)}</span></span></div>
+            </div>
+        </div>
+
+        <div class="consulta-section">
+            <h3>👤 Funcionario</h3>
+            <div class="two-col">
+                <div class="form-group"><label>ID funcionario</label><span>${fmt(m.funcionarioId)}</span></div>
+                <div class="form-group"><label>Cédula</label><span>${fmt(m.cedulaFuncionario)}</span></div>
+                <div class="form-group"><label>Nombre</label><span><strong>${fmt(m.nombreFuncionario)}</strong></span></div>
+            </div>
+        </div>
+
+        <div class="consulta-section">
+            <h3>🗓 Fechas y Registro</h3>
+            <div class="two-col">
+                <div class="form-group"><label>Fecha/hora (generación)</label><span>${formaFecha(m.fechaHora)}</span></div>
+                <div class="form-group"><label>Fecha de mantenimiento</label><span>${formaFecha(m.fechaMantenimiento)}</span></div>
+                <div class="form-group"><label>Fecha de creación del registro</label><span>${formaFecha(m.fechaCreacion)}</span></div>
+                <div class="form-group"><label>Registrado por (usuario)</label><span>${fmt(m.nombreUsuario)}</span></div>
+            </div>
+        </div>
+
+        <div class="consulta-section">
+            <h3>📝 Descripción del mantenimiento</h3>
+            <div class="two-col">
+                <div class="form-group" style="grid-column: 1 / -1;"><label>Diagnóstico</label><span>${fmt(m.diagnostico)}</span></div>
+                <div class="form-group" style="grid-column: 1 / -1;"><label>Trabajo realizado</label><span>${fmt(m.trabajoRealizado)}</span></div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("modalDetalleMantenimiento").style.display = "flex";
+}
+
+function escaDate(v) {
+    return esc(String(v).replace("T", " ").substring(0, 16));
+}
+
+function cerrarDetalleMantenimiento() {
+    const modal = document.getElementById("modalDetalleMantenimiento");
+    if (modal) modal.style.display = "none";
 }
 
 async function mostrarErrorRespuesta(respuesta, mensajePorDefecto) {

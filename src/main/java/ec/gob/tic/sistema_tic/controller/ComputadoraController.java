@@ -26,7 +26,11 @@ public class ComputadoraController {
     @GetMapping
     public List<ComputadoraResponseDTO> listar(
             @RequestParam(value = "serie", required = false) String serie,
-            @RequestParam(value = "cedula", required = false) String cedula) {
+            @RequestParam(value = "cedula", required = false) String cedula,
+            @RequestParam(value = "sinFuncionario", required = false, defaultValue = "false") boolean sinFuncionario) {
+        if (sinFuncionario) {
+            return computadoraService.listarSinFuncionario();
+        }
         if ((serie != null && !serie.isBlank()) || (cedula != null && !cedula.isBlank())) {
             return computadoraService.buscar(serie, cedula);
         }

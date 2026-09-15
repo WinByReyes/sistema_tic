@@ -45,6 +45,14 @@ public class ComputadoraService {
     }
 
     @Transactional(readOnly = true)
+    public List<ComputadoraResponseDTO> listarSinFuncionario() {
+        return computadoraRepository.findSinFuncionario()
+                .stream()
+                .map(ComputadoraResponseDTO::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ComputadoraResponseDTO> buscar(String serie, String cedula) {
         String serieParam = (serie != null && !serie.isBlank()) ? serie.trim() : null;
         String cedulaParam = (cedula != null && !cedula.isBlank()) ? cedula.trim() : null;
