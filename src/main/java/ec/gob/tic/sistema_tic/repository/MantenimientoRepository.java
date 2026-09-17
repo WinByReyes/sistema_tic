@@ -29,8 +29,8 @@ public interface MantenimientoRepository extends JpaRepository<Mantenimiento, Lo
             "LEFT JOIN FETCH m.computadora c " +
             "LEFT JOIN FETCH c.funcionario f " +
             "LEFT JOIN FETCH m.usuario u " +
-            "WHERE (:serie IS NULL OR LOWER(c.serie) LIKE LOWER(CONCAT('%', cast(:serie as string), '%'))) " +
-            "AND (:cedula IS NULL OR (f IS NOT NULL AND LOWER(f.cedula) LIKE LOWER(CONCAT('%', cast(:cedula as string), '%')))) " +
+            "WHERE (:serie IS NULL OR LOWER(c.serie) LIKE LOWER(CONCAT('%', :serie, '%'))) " +
+            "AND (:cedula IS NULL OR (f IS NOT NULL AND LOWER(f.cedula) LIKE LOWER(CONCAT('%', :cedula, '%')))) " +
             "ORDER BY m.id DESC")
     List<Mantenimiento> buscarPorSerieYCedula(@Param("serie") String serie, @Param("cedula") String cedula);
 

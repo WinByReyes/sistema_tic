@@ -34,8 +34,8 @@ public interface ComputadoraRepository extends JpaRepository<Computadora, Long> 
     List<Computadora> findBySerieContainingIgnoreCase(@Param("serie") String serie);
 
     @Query("SELECT c FROM Computadora c LEFT JOIN FETCH c.funcionario WHERE " +
-            "(:serie IS NULL OR LOWER(c.serie) LIKE LOWER(CONCAT('%', cast(:serie as string), '%'))) AND " +
-            "(:cedula IS NULL OR (c.funcionario IS NOT NULL AND LOWER(c.funcionario.cedula) LIKE LOWER(CONCAT('%', cast(:cedula as string), '%')))) " +
+            "(:serie IS NULL OR LOWER(c.serie) LIKE LOWER(CONCAT('%', :serie, '%'))) AND " +
+            "(:cedula IS NULL OR (c.funcionario IS NOT NULL AND LOWER(c.funcionario.cedula) LIKE LOWER(CONCAT('%', :cedula, '%')))) " +
             "ORDER BY c.id DESC")
     List<Computadora> buscarPorSerieYCedula(@Param("serie") String serie, @Param("cedula") String cedula);
 }
