@@ -163,8 +163,8 @@ public class MantenimientoService {
 
     @Transactional(readOnly = true)
     public List<MantenimientoResponseDTO> buscar(String serie, String cedula) {
-        String serieParam = (serie != null && !serie.trim().isEmpty()) ? serie.trim() : null;
-        String cedulaParam = (cedula != null && !cedula.trim().isEmpty()) ? cedula.trim() : null;
+        String serieParam = (serie != null && !serie.trim().isEmpty()) ? serie.trim() : "";
+        String cedulaParam = (cedula != null && !cedula.trim().isEmpty()) ? cedula.trim() : "";
 
         validarExisteFuncionario(cedulaParam);
 
@@ -175,7 +175,7 @@ public class MantenimientoService {
     }
 
     private void validarExisteFuncionario(String cedula) {
-        if (cedula == null) {
+        if (cedula == null || cedula.isEmpty()) {
             return;
         }
         if (funcionarioRepository.findByCedulaContaining(cedula).isEmpty()) {

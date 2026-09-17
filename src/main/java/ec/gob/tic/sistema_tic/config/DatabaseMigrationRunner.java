@@ -58,9 +58,12 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
                 "ALTER TABLE mantenimiento ALTER COLUMN responsable SET NOT NULL",
 
                 // ---- V2: limpiar columnas obsoletas ----
+                // IMPORTANTE: "responsable_id" (FK a la tabla "responsable") NO se
+                // elimina: conserva información histórica que no puede mapearse de
+                // forma segura a la columna "responsable". Revisar manualmente en la
+                // BD antes de decidir una migración definitiva.
                 "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS estado_anterior",
                 "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS responsable_manual",
-                "ALTER TABLE mantenimiento DROP COLUMN IF EXISTS responsable_id",
 
                 // ---- Otras columnas de mantenmiento que la entidad exige ----
                 "ALTER TABLE mantenimiento ADD COLUMN IF NOT EXISTS fecha_mantenimiento TIMESTAMP",

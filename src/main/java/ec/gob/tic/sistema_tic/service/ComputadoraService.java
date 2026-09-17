@@ -54,10 +54,10 @@ public class ComputadoraService {
 
     @Transactional(readOnly = true)
     public List<ComputadoraResponseDTO> buscar(String serie, String cedula) {
-        String serieParam = (serie != null && !serie.isBlank()) ? serie.trim() : null;
-        String cedulaParam = (cedula != null && !cedula.isBlank()) ? cedula.trim() : null;
+        String serieParam = (serie != null && !serie.isBlank()) ? serie.trim() : "";
+        String cedulaParam = (cedula != null && !cedula.isBlank()) ? cedula.trim() : "";
 
-        if (serieParam == null && cedulaParam == null) {
+        if (serieParam.isEmpty() && cedulaParam.isEmpty()) {
             return listarTodas();
         }
 
@@ -70,7 +70,7 @@ public class ComputadoraService {
     }
 
     private void validarExisteFuncionario(String cedula) {
-        if (cedula == null) {
+        if (cedula == null || cedula.isEmpty()) {
             return;
         }
         if (funcionarioRepository.findByCedulaContaining(cedula).isEmpty()) {

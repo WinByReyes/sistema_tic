@@ -235,7 +235,7 @@ public class ConsultaService {
             String serieFiltro =
                     tieneSerie
                             ? serie.trim()
-                            : null;
+                            : "";
 
 
             computadoras =
