@@ -178,7 +178,7 @@ public class MantenimientoService {
         if (cedula == null) {
             return;
         }
-        if (funcionarioRepository.findByCedulaContainingIgnoreCase(cedula).isEmpty()) {
+        if (funcionarioRepository.findByCedulaContaining(cedula).isEmpty()) {
             throw new RecursoNoEncontradoException(
                     "No existe un funcionario con la cédula: " + cedula
             );

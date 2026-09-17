@@ -215,7 +215,7 @@ public class ConsultaService {
 
             if (funcionarioRepository
 
-                    .findByCedulaContainingIgnoreCase(
+                    .findByCedulaContaining(
                             cedula.trim()
                     )
 

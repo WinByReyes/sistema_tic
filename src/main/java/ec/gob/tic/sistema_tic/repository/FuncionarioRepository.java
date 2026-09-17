@@ -14,11 +14,11 @@ public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> 
 
     Optional<Funcionario> findByCodigoBiometrico(String codigoBiometrico);
 
-    @Query("SELECT f FROM Funcionario f WHERE LOWER(f.cedula) LIKE LOWER(CONCAT('%', :cedula, '%')) ORDER BY f.id DESC")
-    List<Funcionario> findByCedulaContainingIgnoreCase(@Param("cedula") String cedula);
+    @Query("SELECT f FROM Funcionario f WHERE f.cedula LIKE CONCAT('%', :cedula, '%') ORDER BY f.id DESC")
+    List<Funcionario> findByCedulaContaining(@Param("cedula") String cedula);
 
     @Query("SELECT f FROM Funcionario f WHERE " +
-            "LOWER(f.cedula) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
+            "f.cedula LIKE CONCAT('%', :termino, '%') OR " +
             "LOWER(COALESCE(f.nombres, '')) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
             "LOWER(COALESCE(f.apellidos, '')) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
             "LOWER(COALESCE(f.nombrePila, '')) LIKE LOWER(CONCAT('%', :termino, '%')) " +
