@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario General - Sistema TIC</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+    <style>
+        .inventario-totales {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .inventario-total {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .inventario-total .total-icon {
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 20px;
+        }
+        .inventario-total .total-info span {
+            color: var(--color-text-muted);
+            font-size: 12px;
+        }
+        .inventario-total .total-info strong {
+            color: var(--color-dark);
+            font-size: 24px;
+        }
+        @media (max-width: 768px) {
+            .inventario-totales {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ======================================== -->
+<!-- SIDEBAR -->
+<!-- ======================================== -->
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">TIC</div>
+        <div class="logo-text">
+            <h2>SISTEMA TIC</h2>
+            <span>Gestión institucional</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="menu-item">
+            <span>Inicio</span>
+        </a>
+        <a href="/usuarios" class="menu-item">
+            <span>Usuarios</span>
+        </a>
+        <a href="/funcionarios" class="menu-item">
+            <span>Funcionarios</span>
+        </a>
+        <a href="/computadoras" class="menu-item">
+            <span>Computadoras</span>
+        </a>
+        <a href="/equipos-tecnologicos" class="menu-item">
+            <span>Periféricos</span>
+        </a>
+        <a href="/impresoras" class="menu-item">
+            <span>Impresoras</span>
+        </a>
+        <a href="/inventario" class="menu-item active">
+            <span>Inventario general</span>
+        </a>
+        <a href="/mantenimientos" class="menu-item">
+            <span>Mantenimientos</span>
+        </a>
+        <a href="/consultas" class="menu-item">
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+            <a href="/administracion" class="menu-item" id="menuAdministracion">
+                <span>Administración</span>
+            </a>
+            <div class="submenu">
+                <a href="/usuarios" class="submenu-item">
+Usuarios
+                </a>
+                <a href="/funcionarios" class="submenu-item">
+Funcionarios
+                </a>
+                <a href="/catalogos" class="submenu-item">
+Catálogos
+                </a>
+                <a href="/auditoria" class="submenu-item">
+Auditoría
+                </a>
+                <a href="/respaldos" class="submenu-item">
+Respaldos
+                </a>
+                <a href="/configuracion-institucional" class="submenu-item">
+Configuración Institucional
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="#" id="logout" class="menu-item logout-item">
+            <span>Cerrar sesión</span>
+        </a>
+    </div>
+</aside>
+
+<!-- ======================================== -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ======================================== -->
+<main class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1>Inventario general</h1>
+            <p>Tabla consolidada del inventario tecnológico registrado en el sistema</p>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="imprimirInventario()">
+            🖨 Imprimir inventario
+        </button>
+    </header>
+
+    <!-- TOTALES -->
+    <section class="inventario-totales" id="inventarioTotales">
+        <div class="inventario-total">
+            <div class="total-icon" style="background: var(--color-primary-soft); color: var(--color-primary);">🖥️</div>
+            <div class="total-info">
+                <span>Computadoras</span><br>
+                <strong id="totalComputadoras">0</strong>
+            </div>
+        </div>
+        <div class="inventario-total">
+            <div class="total-icon" style="background: var(--color-success-soft); color: var(--color-success);">🖱️</div>
+            <div class="total-info">
+                <span>Periféricos</span><br>
+                <strong id="totalPerifericos">0</strong>
+            </div>
+        </div>
+        <div class="inventario-total">
+            <div class="total-icon" style="background: var(--color-warning-soft); color: #ea580c;">🖨️</div>
+            <div class="total-info">
+                <span>Impresoras</span><br>
+                <strong id="totalImpresoras">0</strong>
+            </div>
+        </div>
+        <div class="inventario-total">
+            <div class="total-icon" style="background: var(--color-danger-soft); color: var(--color-danger);">📊</div>
+            <div class="total-info">
+                <span>Total general</span><br>
+                <strong id="totalGeneral">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABLA CONSOLIDADA -->
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Inventario consolidado</h2>
+                <p>Todas las computadoras, periféricos e impresoras en una sola tabla, ordenados alfabéticamente</p>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Funcionario</th>
+                    <th>Unidad administrativa</th>
+                    <th>Tipo equipo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Serie</th>
+                    <th>Estado</th>
+                </tr>
+                </thead>
+                <tbody id="tablaInventarioGeneral">
+                    <!-- Dinámico -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/inventario.js"></script>
+
+</body>
+</html>

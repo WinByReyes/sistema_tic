@@ -9,6 +9,8 @@ public class ConsultaFuncionarioResponseDTO {
 
     private List<MantenimientoResponseDTO> mantenimientos;
 
+    private List<EquipoTecnologicoResponseDTO> equiposTecnologicos;
+
     public ConsultaFuncionarioResponseDTO
             (FuncionarioResponseDTO funcionario,
              List<ComputadoraResponseDTO> computadoras,
@@ -40,5 +42,13 @@ public class ConsultaFuncionarioResponseDTO {
 
     public void setMantenimientos(List<MantenimientoResponseDTO> mantenimientos) {
         this.mantenimientos = mantenimientos;
+    }
+
+    public List<EquipoTecnologicoResponseDTO> getEquiposTecnologicos() {
+        return equiposTecnologicos;
+    }
+
+    public void setEquiposTecnologicos(List<EquipoTecnologicoResponseDTO> equiposTecnologicos) {
+        this.equiposTecnologicos = equiposTecnologicos;
     }
 }

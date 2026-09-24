@@ -38,6 +38,24 @@ public class VistaController {
         return "computadoras/computadoras";
     }
 
+    @GetMapping("/equipos-tecnologicos")
+    public String equiposTecnologicos()
+    {
+        return "equipos-tecnologicos/equipos-tecnologicos";
+    }
+
+    @GetMapping("/impresoras")
+    public String impresoras()
+    {
+        return "impresoras/impresoras";
+    }
+
+    @GetMapping("/inventario")
+    public String inventario()
+    {
+        return "inventario/inventario";
+    }
+
     @GetMapping("/mantenimientos")
     public String mantenimientos()
     {

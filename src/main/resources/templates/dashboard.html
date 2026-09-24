@@ -33,141 +33,59 @@
 
 
     <nav class="sidebar-nav">
-
         <a href="/dashboard" class="menu-item active">
-            <span class="menu-icon">⌂</span>
             <span>Inicio</span>
         </a>
-
         <a href="/usuarios" class="menu-item">
-            <span class="menu-icon">♙</span>
             <span>Usuarios</span>
         </a>
-
         <a href="/funcionarios" class="menu-item">
-            <span class="menu-icon">♙</span>
             <span>Funcionarios</span>
         </a>
-
         <a href="/computadoras" class="menu-item">
-            <span class="menu-icon">▣</span>
             <span>Computadoras</span>
         </a>
-
+        <a href="/equipos-tecnologicos" class="menu-item">
+            <span>Periféricos</span>
+        </a>
+        <a href="/impresoras" class="menu-item">
+            <span>Impresoras</span>
+        </a>
+        <a href="/inventario" class="menu-item">
+            <span>Inventario general</span>
+        </a>
         <a href="/mantenimientos" class="menu-item">
-            <span class="menu-icon">⚙</span>
             <span>Mantenimientos</span>
         </a>
-
         <a href="/consultas" class="menu-item">
-            <span class="menu-icon">⌕</span>
             <span>Consultas</span>
         </a>
 
         <div class="menu-dropdown">
-
-            <a
-                    href="/administracion"
-                    class="menu-item"
-                    id="menuAdministracion">
-
-        <span class="menu-icon">
-            ⚙
-        </span>
-
-                <span>
-            Administración
-        </span>
-
-                <span class="menu-arrow">
-            ▸
-        </span>
-
+            <a href="/administracion" class="menu-item" id="menuAdministracion">
+                <span>Administración</span>
             </a>
-
-
             <div class="submenu">
-
-                <a
-                        href="/usuarios"
-                        class="submenu-item">
-
-            <span>
-                ♙
-            </span>
-
-                    Usuarios
-
+                <a href="/usuarios" class="submenu-item">
+Usuarios
                 </a>
-
-
-                <a
-                        href="/funcionarios"
-                        class="submenu-item">
-
-            <span>
-                👷
-            </span>
-
-                    Funcionarios
-
+                <a href="/funcionarios" class="submenu-item">
+Funcionarios
                 </a>
-
-
-                <a
-                        href="/catalogos"
-                        class="submenu-item">
-
-            <span>
-                ⚙
-            </span>
-
-                    Catálogos
-
+                <a href="/catalogos" class="submenu-item">
+Catálogos
                 </a>
-
-                <a
-                        href="/auditoria"
-                        class="submenu-item">
-
-            <span>
-                ⌕
-            </span>
-
-                    Auditoría
-
+                <a href="/auditoria" class="submenu-item">
+Auditoría
                 </a>
-
-
-                <a
-                        href="/respaldos"
-                        class="submenu-item">
-
-            <span>
-                💾
-            </span>
-
-                    Respaldos
-
+                <a href="/respaldos" class="submenu-item">
+Respaldos
                 </a>
-
-
-                <a
-                        href="/configuracion-institucional"
-                        class="submenu-item">
-
-            <span>
-                ⌂
-            </span>
-
-                    Configuración Institucional
-
+                <a href="/configuracion-institucional" class="submenu-item">
+Configuración Institucional
                 </a>
-
             </div>
-
         </div>
-
     </nav>
 
 
@@ -177,7 +95,6 @@
 
         <a href="#" id="logout" class="menu-item logout-item">
 
-            <span class="menu-icon">↪</span>
 
             <span>Cerrar sesión</span>
 
@@ -213,10 +130,6 @@
 
 
         <div class="topbar-user">
-
-            <div class="notification-icon">
-                🔔
-            </div>
 
             <div class="user-avatar">
                 <span id="avatarUsuario">U</span>
@@ -284,33 +197,9 @@
                 </div>
 
 
-                <!--
-                    Si posteriormente tienes el logo oficial,
-                    puedes reemplazar este bloque por:
-
-                    <img src="/images/logo-gobierno.png"
-                         class="government-logo">
-                -->
-
-                <div class="government-area">
-
-                    <div class="government-emblem">
-                        EC
-                    </div>
-
-                    <strong>
-                        GOBIERNO
-                    </strong>
-
-                    <span>
-                        DEL ECUADOR
-                    </span>
-
-                    <small>
-                        Sistema TIC
-                    </small>
-
-                </div>
+                <img src="/img/logo_ecuador.png"
+                     class="government-logo"
+                     alt="Gobierno del Ecuador">
 
             </div>
 
@@ -485,6 +374,56 @@
                         </span>
 
                         <strong id="totalComputadoras">
+                            0
+                        </strong>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- PERIFÉRICOS -->
+
+                <a href="/equipos-tecnologicos"
+                   class="stat-card">
+
+                    <div class="stat-icon stat-peripherals">
+                        🖱
+                    </div>
+
+                    <div class="stat-information">
+
+                        <span>
+                            Periféricos
+                        </span>
+
+                        <strong id="totalPerifericos">
+                            0
+                        </strong>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- IMPRESORAS -->
+
+                <a href="/impresoras"
+                   class="stat-card">
+
+                    <div class="stat-icon stat-printers">
+                        🖨
+                    </div>
+
+                    <div class="stat-information">
+
+                        <span>
+                            Impresoras
+                        </span>
+
+                        <strong id="totalImpresoras">
                             0
                         </strong>
 

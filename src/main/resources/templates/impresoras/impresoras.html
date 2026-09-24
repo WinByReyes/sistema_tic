@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impresoras - Sistema TIC</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+</head>
+
+<body>
+
+<!-- ======================================== -->
+<!-- SIDEBAR -->
+<!-- ======================================== -->
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">TIC</div>
+        <div class="logo-text">
+            <h2>SISTEMA TIC</h2>
+            <span>Gestión institucional</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="menu-item">
+            <span>Inicio</span>
+        </a>
+        <a href="/usuarios" class="menu-item">
+            <span>Usuarios</span>
+        </a>
+        <a href="/funcionarios" class="menu-item">
+            <span>Funcionarios</span>
+        </a>
+        <a href="/computadoras" class="menu-item">
+            <span>Computadoras</span>
+        </a>
+        <a href="/equipos-tecnologicos" class="menu-item">
+            <span>Periféricos</span>
+        </a>
+        <a href="/impresoras" class="menu-item active">
+            <span>Impresoras</span>
+        </a>
+        <a href="/inventario" class="menu-item">
+            <span>Inventario general</span>
+        </a>
+        <a href="/mantenimientos" class="menu-item">
+            <span>Mantenimientos</span>
+        </a>
+        <a href="/consultas" class="menu-item">
+            <span>Consultas</span>
+        </a>
+
+        <div class="menu-dropdown">
+            <a href="/administracion" class="menu-item" id="menuAdministracion">
+                <span>Administración</span>
+            </a>
+            <div class="submenu">
+                <a href="/usuarios" class="submenu-item">
+Usuarios
+                </a>
+                <a href="/funcionarios" class="submenu-item">
+Funcionarios
+                </a>
+                <a href="/catalogos" class="submenu-item">
+Catálogos
+                </a>
+                <a href="/auditoria" class="submenu-item">
+Auditoría
+                </a>
+                <a href="/respaldos" class="submenu-item">
+Respaldos
+                </a>
+                <a href="/configuracion-institucional" class="submenu-item">
+Configuración Institucional
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="#" id="logout" class="menu-item logout-item">
+            <span>Cerrar sesión</span>
+        </a>
+    </div>
+</aside>
+
+<!-- ======================================== -->
+<!-- CONTENIDO PRINCIPAL -->
+<!-- ======================================== -->
+<main class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1>Impresoras</h1>
+            <p>Registro y administración de impresoras institucionales</p>
+        </div>
+    </header>
+
+    <!-- BÚSQUEDA MULTICRITERIO -->
+    <div class="search-container">
+        <div class="search-container-header">Búsqueda de impresoras</div>
+        <div class="form-grid-tres">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="buscarCedula">Cédula del funcionario</label>
+                <input type="text" id="buscarCedula" placeholder="Ej. 2300559339" maxlength="10">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="buscarSerie">Número de serie</label>
+                <input type="text" id="buscarSerie" placeholder="Ej. SN-8921">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="filtroTipo">Tipo de equipo</label>
+                <select id="filtroTipo">
+                    <option value="">Todos los tipos</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="filtroMarca">Marca</label>
+                <select id="filtroMarca">
+                    <option value="">Todas las marcas</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="filtroModelo">Modelo</label>
+                <input type="text" id="filtroModelo" placeholder="Ej. L3150">
+            </div>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="buscarImpresoras()">🔍 Buscar</button>
+                <button type="button" class="btn btn-secondary" onclick="limpiarBusqueda()">Limpiar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTADO -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Lista de impresoras</h2>
+            <button class="btn btn-primary" onclick="abrirFormulario()">
+                + Agregar impresora
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width: 45px;">Nro.</th>
+                    <th>Funcionario</th>
+                    <th>Unidad administrativa</th>
+                    <th>Tipo equipo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Serie</th>
+                    <th>Estado</th>
+                    <th style="width: 90px; text-align: center;">Acciones</th>
+                </tr>
+                </thead>
+                <tbody id="tablaImpresoras"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- FORMULARIO -->
+    <section id="formularioImpresora" class="panel formulario-panel" style="display:none;">
+        <div class="panel-header">
+            <h2 id="tituloFormulario">Nueva impresora</h2>
+        </div>
+
+        <form id="impresoraForm">
+            <input type="hidden" id="impresoraId">
+
+            <!-- SECCIÓN 1: DATOS GENERALES -->
+            <div class="form-section">
+                <div class="form-section-title">
+1. DATOS GENERALES
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="funcionario">Funcionario asignado</label>
+                        <select id="funcionario" onchange="alSeleccionarFuncionario()">
+                            <option value="">Sin funcionario asignado</option>
+                        </select>
+                        <small style="color: #64748b;">* Opcional. Un funcionario puede tener varias impresoras asignadas</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unidadAdministrativa">Unidad administrativa</label>
+                        <input type="text" id="unidadAdministrativa" readonly placeholder="Se autocompleta con el funcionario">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoEquipo">Tipo de equipo *</label>
+                        <select id="tipoEquipo" required>
+                            <option value="">Seleccione el tipo de equipo</option>
+                        </select>
+                        <input type="text" id="tipoEquipoOtro" placeholder="Escriba el tipo de equipo" style="display: none; margin-top: 6px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marca">Marca *</label>
+                        <select id="marca" required>
+                            <option value="">Seleccione la marca</option>
+                        </select>
+                        <input type="text" id="marcaOtro" placeholder="Escriba la marca" style="display: none; margin-top: 6px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelo">Modelo</label>
+                        <input type="text" id="modelo" maxlength="100" placeholder="Ej. L3150">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serie">Serie</label>
+                        <input type="text" id="serie" maxlength="100" placeholder="Ej. SN-8921">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estado">Estado *</label>
+                        <select id="estado" required>
+                            <option value="">Seleccione el estado</option>
+                        </select>
+                        <input type="text" id="estadoOtro" placeholder="Escriba el estado" style="display: none; margin-top: 6px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarFormulario()">Cancelar</button>
+            </div>
+        </form>
+    </section>
+
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/impresoras.js"></script>
+
+</body>
+</html>

@@ -47,6 +47,11 @@ public class CatalogoService {
             "ESTADO_POSTERIOR_COMPUTADORA",
             "RESPONSABLE_MANTENIMIENTO",
 
+            // EQUIPAMIENTO TECNOLÓGICO
+            "TIPO_EQUIPO_TECNOLOGICO",
+            "MARCA_EQUIPO_TECNOLOGICO",
+            "MODELO_EQUIPO_TECNOLOGICO",
+
             // LEGACY
             "ESTADO"
     );

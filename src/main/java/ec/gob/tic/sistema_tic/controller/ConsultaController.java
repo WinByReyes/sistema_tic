@@ -4,6 +4,7 @@ package ec.gob.tic.sistema_tic.controller;
 import ec.gob.tic.sistema_tic.audit.Auditable;
 import ec.gob.tic.sistema_tic.dto.ConsultaComputadoraResponseDTO;
 import ec.gob.tic.sistema_tic.dto.ConsultaFuncionarioResponseDTO;
+import ec.gob.tic.sistema_tic.dto.EquipoTecnologicoResponseDTO;
 import ec.gob.tic.sistema_tic.dto.MantenimientoResponseDTO;
 import ec.gob.tic.sistema_tic.service.ConsultaService;
 
@@ -97,6 +98,44 @@ public class ConsultaController {
                 consultaService
                         .consultarComputadoras(
                                 nombre,
+                                serie,
+                                cedula
+                        )
+
+        );
+
+    }
+
+
+    // ========================================
+    // CONSULTAR EQUIPAMIENTO TECNOLÓGICO
+    // ========================================
+    @Auditable(
+            modulo = "CONSULTAS",
+            accion = "CONSULTAR_EQUIPOS_TECNOLOGICOS",
+            descripcion = "Consultó información de equipamiento tecnológico"
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECNICO')")
+
+    @GetMapping("/equipos-tecnologicos")
+
+    public ResponseEntity<
+            List<EquipoTecnologicoResponseDTO>>
+    buscarEquiposTecnologicos(
+
+            @RequestParam(
+                    required = false)
+            String serie,
+
+            @RequestParam(
+                    required = false)
+            String cedula) {
+
+
+        return ResponseEntity.ok(
+
+                consultaService
+                        .consultarEquiposTecnologicos(
                                 serie,
                                 cedula
                         )

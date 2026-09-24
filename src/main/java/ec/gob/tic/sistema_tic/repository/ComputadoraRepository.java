@@ -1,10 +1,12 @@
 package ec.gob.tic.sistema_tic.repository;
 
+import ec.gob.tic.sistema_tic.dto.ResumenEquipamientoDTO;
 import ec.gob.tic.sistema_tic.entity.Computadora;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,4 +40,16 @@ public interface ComputadoraRepository extends JpaRepository<Computadora, Long> 
             "(:cedula = '' OR (c.funcionario IS NOT NULL AND c.funcionario.cedula LIKE CONCAT('%', :cedula, '%'))) " +
             "ORDER BY c.id DESC")
     List<Computadora> buscarPorSerieYCedula(@Param("serie") String serie, @Param("cedula") String cedula);
+
+    @Query("SELECT new ec.gob.tic.sistema_tic.dto.ResumenEquipamientoDTO(c.tipo, COUNT(c)) " +
+            "FROM Computadora c GROUP BY c.tipo ORDER BY c.tipo")
+    List<ResumenEquipamientoDTO> resumenPorTipo();
+
+    @Query("SELECT new ec.gob.tic.sistema_tic.dto.ResumenEquipamientoDTO(c.tipo, COUNT(c)) " +
+            "FROM Computadora c " +
+            "WHERE c.fechaCreacion >= :desde AND c.fechaCreacion < :hasta " +
+            "GROUP BY c.tipo ORDER BY c.tipo")
+    List<ResumenEquipamientoDTO> resumenPorTipoEntreFechas(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta);
 }

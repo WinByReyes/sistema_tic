@@ -5,6 +5,7 @@ import ec.gob.tic.sistema_tic.dto.AsignacionComputadoraResponseDTO;
 import ec.gob.tic.sistema_tic.dto.ComputadoraResponseDTO;
 import ec.gob.tic.sistema_tic.dto.ConsultaComputadoraResponseDTO;
 import ec.gob.tic.sistema_tic.dto.ConsultaFuncionarioResponseDTO;
+import ec.gob.tic.sistema_tic.dto.EquipoTecnologicoResponseDTO;
 import ec.gob.tic.sistema_tic.dto.FuncionarioResponseDTO;
 import ec.gob.tic.sistema_tic.dto.MantenimientoResponseDTO;
 
@@ -16,6 +17,7 @@ import ec.gob.tic.sistema_tic.exception.RecursoNoEncontradoException;
 
 import ec.gob.tic.sistema_tic.repository.AsignacionComputadoraRepository;
 import ec.gob.tic.sistema_tic.repository.ComputadoraRepository;
+import ec.gob.tic.sistema_tic.repository.EquipoTecnologicoRepository;
 import ec.gob.tic.sistema_tic.repository.FuncionarioRepository;
 import ec.gob.tic.sistema_tic.repository.MantenimientoRepository;
 
@@ -46,6 +48,10 @@ public class ConsultaService {
             asignacionRepository;
 
 
+    private final EquipoTecnologicoRepository
+            equipoTecnologicoRepository;
+
+
     public ConsultaService(
 
             FuncionarioRepository
@@ -58,7 +64,10 @@ public class ConsultaService {
                     mantenimientoRepository,
 
             AsignacionComputadoraRepository
-                    asignacionRepository) {
+                    asignacionRepository,
+
+            EquipoTecnologicoRepository
+                    equipoTecnologicoRepository) {
 
 
         this.funcionarioRepository =
@@ -75,6 +84,10 @@ public class ConsultaService {
 
         this.asignacionRepository =
                 asignacionRepository;
+
+
+        this.equipoTecnologicoRepository =
+                equipoTecnologicoRepository;
 
     }
 
@@ -124,35 +137,152 @@ public class ConsultaService {
                         );
 
 
-        return new ConsultaFuncionarioResponseDTO(
+        List<EquipoTecnologicoResponseDTO> equipos =
 
-                convertirFuncionario(
-                        funcionario
-                ),
-
-
-                computadoras
+                equipoTecnologicoRepository
+                        .findByFuncionarioId(
+                                funcionario.getId()
+                        )
 
                         .stream()
 
                         .map(
-                                ComputadoraResponseDTO::new
+                                EquipoTecnologicoResponseDTO::new
                         )
 
-                        .toList(),
+                        .toList();
 
 
-                mantenimientos
+        ConsultaFuncionarioResponseDTO respuesta =
 
-                        .stream()
+                new ConsultaFuncionarioResponseDTO(
 
-                        .map(
-                                this::convertirMantenimiento
-                        )
+                        convertirFuncionario(
+                                funcionario
+                        ),
 
-                        .toList()
 
+                        computadoras
+
+                                .stream()
+
+                                .map(
+                                        ComputadoraResponseDTO::new
+                                )
+
+                                .toList(),
+
+
+                        mantenimientos
+
+                                .stream()
+
+                                .map(
+                                        this::convertirMantenimiento
+                                )
+
+                                .toList()
+
+                );
+
+
+        respuesta.setEquiposTecnologicos(
+                equipos
         );
+
+
+        return respuesta;
+
+    }
+
+
+    // ========================================
+    // CONSULTA EQUIPAMIENTO TECNOLÓGICO
+    // ========================================
+
+    @Transactional(readOnly = true)
+    public List<EquipoTecnologicoResponseDTO>
+    consultarEquiposTecnologicos(
+
+            String serie,
+
+            String cedula) {
+
+
+        boolean tieneSerie =
+
+                serie != null &&
+                        !serie.isBlank();
+
+
+        boolean tieneCedula =
+
+                cedula != null &&
+                        !cedula.isBlank();
+
+
+        if (!tieneSerie && !tieneCedula) {
+
+            throw new IllegalArgumentException(
+
+                    "Debe ingresar la cédula del " +
+                            "funcionario, la serie del " +
+                            "equipo o ambos."
+
+            );
+
+        }
+
+
+        String cedulaFiltro =
+                tieneCedula
+                        ? cedula.trim()
+                        : "";
+
+
+        if (tieneCedula) {
+
+            if (funcionarioRepository
+
+                    .findByCedulaContaining(
+                            cedula.trim()
+                    )
+
+                    .isEmpty()) {
+
+                throw new RecursoNoEncontradoException(
+
+                        "No existe un funcionario " +
+                                "con la cédula: " +
+                                cedula.trim()
+
+                );
+
+            }
+
+        }
+
+
+        String serieFiltro =
+                tieneSerie
+                        ? serie.trim()
+                        : "";
+
+
+        return equipoTecnologicoRepository
+
+                .buscarPorSerieYCedula(
+                        serieFiltro,
+                        cedulaFiltro
+                )
+
+                .stream()
+
+                .map(
+                        EquipoTecnologicoResponseDTO::new
+                )
+
+                .toList();
 
     }
 

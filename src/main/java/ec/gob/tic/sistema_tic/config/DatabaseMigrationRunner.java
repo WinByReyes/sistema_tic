@@ -41,6 +41,41 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         ejecutarSentenciasMigracionV2V3();
         eliminarCheckTipoMantenimiento();
+        sembrarCatalogosEquipamientoTecnologico();
+        garantizarTablaImpresoras();
+    }
+
+    /**
+     * Módulo independiente de Impresoras: garantiza que exista la tabla
+     * {@code impresoras} aunque Hibernate aún no la haya creado.
+     *
+     * <p>Se aplica de forma idempotente: si ya existe, la sentencia no hace
+     * nada. Permite que el módulo funcione tanto en local como en producción
+     * (Supabase) sin ejecutar scripts a mano.</p>
+     */
+    private void garantizarTablaImpresoras() {
+        try {
+            jdbcTemplate.execute(
+                    """
+                            CREATE TABLE IF NOT EXISTS impresoras (
+                                id BIGSERIAL PRIMARY KEY,
+                                funcionario_id BIGINT,
+                                tipo_equipo VARCHAR(100) NOT NULL,
+                                marca VARCHAR(50) NOT NULL,
+                                modelo VARCHAR(100),
+                                serie VARCHAR(100),
+                                estado VARCHAR(50) NOT NULL,
+                                fecha_creacion TIMESTAMP NOT NULL,
+                                CONSTRAINT fk_impresoras_funcionario
+                                    FOREIGN KEY (funcionario_id)
+                                    REFERENCES funcionarios(id)
+                            )
+                            """
+            );
+            log.info("Migración Impresoras: tabla 'impresoras' verificada.");
+        } catch (Exception ex) {
+            log.warn("Migración Impresoras: no se pudo verificar la tabla 'impresoras': {}", ex.getMessage());
+        }
     }
 
     /**
@@ -147,5 +182,69 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
         } catch (Exception ex) {
             log.error("Migración V4: no se pudo eliminar la restricción CHECK sobre tipo_mantenimiento.", ex);
         }
+    }
+
+    /**
+     * Valores por defecto para los catálogos del módulo de Equipamiento
+     * Tecnológico (TIPO_EQUIPO_TECNOLOGICO, MARCA_EQUIPO_TECNOLOGICO y
+     * MODELO_EQUIPO_TECNOLOGICO). Se insertan de forma idempotente: si el valor
+     * ya existe (por la restricción única tipo+nombre), se omite.
+     */
+    private void sembrarCatalogosEquipamientoTecnologico() {
+        List<String> tiposEquipo = List.of(
+                "C.P.U (Desktop)",
+                "LAPTOP",
+                "MONITOR",
+                "TECLADO",
+                "MOUSE",
+                "AUDIFONOS",
+                "PARLANTES",
+                "WEBCAM",
+                "UPS",
+                "SCANNER",
+                "PROYECTOR",
+                "IMPRESORAS",
+                "IMPRESORAS TERMICA",
+                "IMPRESORAS TINTA"
+        );
+
+        List<String> marcas = List.of(
+                "DELL",
+                "HP",
+                "LENOVO",
+                "EPSON",
+                "CANON",
+                "BROTHER",
+                "SAMSUNG",
+                "LOGITECH"
+        );
+
+        List<String> modelos = List.of(
+                "PROYECTOR",
+                "IMPRESORA"
+        );
+
+        sembrarValores("TIPO_EQUIPO_TECNOLOGICO", tiposEquipo);
+        sembrarValores("MARCA_EQUIPO_TECNOLOGICO", marcas);
+        sembrarValores("MODELO_EQUIPO_TECNOLOGICO", modelos);
+    }
+
+    private void sembrarValores(String tipo, List<String> valores) {
+        for (String valor : valores) {
+            try {
+                jdbcTemplate.execute(
+                        "INSERT INTO catalogos (tipo, nombre, activo, fecha_creacion) " +
+                                "SELECT '" + tipo + "', '" + valor.replace("'", "''") + "', true, now() " +
+                                "WHERE NOT EXISTS (" +
+                                "    SELECT 1 FROM catalogos " +
+                                "    WHERE tipo = '" + tipo + "' " +
+                                "    AND nombre = '" + valor.replace("'", "''") + "'" +
+                                ")"
+                );
+            } catch (Exception ex) {
+                log.warn("Seed catálogo '{}'='{}' omitido: {}", tipo, valor, ex.getMessage());
+            }
+        }
+        log.info("Seed catálogos '{}': {} valores verificados.", tipo, valores.size());
     }
 }

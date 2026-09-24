@@ -96,6 +96,7 @@ document.getElementById("formFuncionario")?.addEventListener("submit", async eve
         mostrarFuncionario(datos.funcionario);
         mostrarComputadoras(datos.computadoras);
         mostrarMantenimientosFuncionario(datos.mantenimientos);
+        mostrarEquiposTecnologicos(datos.equiposTecnologicos);
 
         document.getElementById("resultadoFuncionario").style.display = "block";
         guardarConsultaReciente(datos.funcionario);
@@ -237,6 +238,50 @@ function mostrarMantenimientosFuncionario(mantenimientos) {
                             👁️
                         </button>
                         <a href="/mantenimientos?editar=${encodeURIComponent(m.id)}" class="btn-icon btn-icon-warning" title="Editar Mantenimiento">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ========================================
+// EQUIPAMIENTO TECNOLÓGICO DEL FUNCIONARIO
+// ========================================
+
+function mostrarEquiposTecnologicos(equipos) {
+    const tabla = document.getElementById("tablaEquiposFuncionario");
+    tabla.innerHTML = "";
+
+    if (!equipos || equipos.length === 0) {
+        tabla.innerHTML = `
+            <tr>
+                <td colspan="11" class="sin-datos">
+                    Este funcionario no tiene periféricos registrados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    equipos.forEach(eq => {
+        tabla.innerHTML += `
+            <tr>
+                <td><strong>${eq.id}</strong></td>
+                <td>${esc(eq.tipoEquipo)}</td>
+                <td>${esc(eq.marca)}</td>
+                <td>${esc(eq.modelo || "N/A")}</td>
+                <td><span style="font-weight: 700; color: #1e293b;">${esc(eq.serie || "N/A")}</span></td>
+                <td>${esc(eq.detalle || "N/A")}</td>
+                <td><span class="badge badge-info">${esc(eq.estado || "N/A")}</span></td>
+                <td>${esc(eq.etiquetaConstatacion || "—")}</td>
+                <td>${esc(eq.nroPR || "—")}</td>
+                <td>${esc(eq.ipTelefono || "—")}</td>
+                <td class="text-center">
+                    <div class="acciones-iconos" style="justify-content: center;">
+                        <a href="/equipos-tecnologicos?editar=${encodeURIComponent(eq.id)}" class="btn-icon btn-icon-warning" title="Editar Equipo Tecnológico">
                             ✏️
                         </a>
                     </div>
@@ -561,6 +606,92 @@ function mostrarMantenimientosConsulta(mantenimientos) {
 }
 
 // ========================================
+// CONSULTA EQUIPAMIENTO TECNOLÓGICO
+// ========================================
+
+document.getElementById("formEquipamiento")?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const serie = document.getElementById("serieEquipo").value.trim();
+    const cedula = document.getElementById("cedulaEquipo").value.trim();
+
+    if (!serie && !cedula) {
+        mostrarMensaje("Ingrese al menos un criterio de búsqueda (Serie o Cédula).", true);
+        return;
+    }
+
+    const params = new URLSearchParams();
+    if (serie) params.append("serie", serie);
+    if (cedula) params.append("cedula", cedula);
+
+    try {
+        mostrarMensaje("Consultando periféricos...");
+        const respuesta = await apiFetch(`/api/consultas/equipos-tecnologicos?${params.toString()}`);
+
+        if (!respuesta) return;
+
+        if (!respuesta.ok) {
+            await mostrarErrorRespuesta(respuesta, "No se encontraron periféricos con esos criterios.");
+            ocultarResultado("resultadoEquipamiento");
+            return;
+        }
+
+        const datos = await respuesta.json();
+
+        if (!datos || datos.length === 0) {
+            ocultarResultado("resultadoEquipamiento");
+            mostrarMensaje("No se encontraron periféricos con los criterios indicados.", true);
+            return;
+        }
+
+        mostrarEquiposConsulta(datos);
+        document.getElementById("resultadoEquipamiento").style.display = "block";
+        ocultarMensaje();
+
+    } catch (error) {
+        console.error(error);
+        ocultarResultado("resultadoEquipamiento");
+        mostrarMensaje("Error de conexión con el servidor.", true);
+    }
+});
+
+function mostrarEquiposConsulta(equipos) {
+    const tabla = document.getElementById("tablaEquiposConsulta");
+    tabla.innerHTML = "";
+
+    if (!equipos || equipos.length === 0) {
+        tabla.innerHTML = `<tr><td colspan="13" class="sin-datos">No se encontraron periféricos con los criterios ingresados.</td></tr>`;
+        return;
+    }
+
+    equipos.forEach(eq => {
+        tabla.innerHTML += `
+            <tr>
+                <td><strong>${eq.id}</strong></td>
+                <td>${esc(eq.nombreFuncionario || "Sin asignar")}</td>
+                <td>${esc(eq.unidadAdministrativaFuncionario || "—")}</td>
+                <td>${esc(eq.tipoEquipo)}</td>
+                <td>${esc(eq.marca)}</td>
+                <td>${esc(eq.modelo || "N/A")}</td>
+                <td><span style="font-weight: 700; color: #1e293b;">${esc(eq.serie || "N/A")}</span></td>
+                <td>${esc(eq.detalle || "N/A")}</td>
+                <td><span class="badge badge-info">${esc(eq.estado || "N/A")}</span></td>
+                <td>${esc(eq.etiquetaConstatacion || "—")}</td>
+                <td>${esc(eq.nroPR || "—")}</td>
+                <td>${esc(eq.ipTelefono || "—")}</td>
+                <td class="text-center">
+                    <div class="acciones-iconos" style="justify-content: center;">
+                        <a href="/equipos-tecnologicos?editar=${encodeURIComponent(eq.id)}" class="btn-icon btn-icon-warning" title="Editar Equipo Tecnológico">
+                            ✏️
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ========================================
 // LIMPIAR BOTONES
 // ========================================
 
@@ -581,6 +712,13 @@ document.getElementById("limpiarMantenimiento")?.addEventListener("click", () =>
     document.getElementById("formMantenimiento").reset();
     ocultarResultado("resultadoMantenimiento");
     document.getElementById("tablaMantenimientosConsulta").innerHTML = "";
+    ocultarMensaje();
+});
+
+document.getElementById("limpiarEquipamiento")?.addEventListener("click", () => {
+    document.getElementById("formEquipamiento").reset();
+    ocultarResultado("resultadoEquipamiento");
+    document.getElementById("tablaEquiposConsulta").innerHTML = "";
     ocultarMensaje();
 });
 
@@ -770,6 +908,10 @@ document.getElementById("generarReporteFuncionario")?.addEventListener("click", 
 
 document.getElementById("generarReporteMantenimiento")?.addEventListener("click", () => {
     generarReporte("Reporte General de Mantenimientos", "#resultadoMantenimiento");
+});
+
+document.getElementById("generarReporteEquipamiento")?.addEventListener("click", () => {
+    generarReporte("Reporte de Periféricos", "#resultadoEquipamiento");
 });
 
 function guardarConsultaReciente(funcionario) {

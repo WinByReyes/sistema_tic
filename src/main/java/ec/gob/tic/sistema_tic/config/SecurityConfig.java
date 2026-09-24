@@ -71,13 +71,16 @@ public class SecurityConfig {
                         // PÁGINAS DEL FRONTEND
                         // ==========================
 
-                        .requestMatchers(
+.requestMatchers(
                                 "/",
                                 "/login",
                                 "/dashboard",
                                 "/usuarios",
                                 "/funcionarios",
                                 "/computadoras",
+                                "/equipos-tecnologicos",
+                                "/impresoras",
+                                "/inventario",
                                 "/mantenimientos",
                                 "/consultas",
                                 "/administracion",
@@ -96,6 +99,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
+                                "/img/**",
                                 "/images/**",
                                 "/favicon.ico"
                         ).permitAll()

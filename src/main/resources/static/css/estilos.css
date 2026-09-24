@@ -489,6 +489,55 @@ body {
     font-size: 13px;
 }
 
+.topbar-user,
+.topbar-user-admin {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.user-avatar,
+.user-avatar-admin {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.topbar-user-info,
+.topbar-user-info-admin {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.35;
+    min-width: 0;
+}
+
+.topbar-user-info strong,
+.topbar-user-info-admin strong {
+    color: var(--color-dark);
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-user-info small,
+.topbar-user-info-admin small {
+    color: var(--color-text-muted);
+    font-size: 11.5px;
+}
+
 /* =========================================================
    PANELES
    ========================================================= */
@@ -958,6 +1007,20 @@ tbody tr:last-child td {
     margin-top: 8px;
     color: var(--color-text-muted);
     font-size: 9.5px;
+}
+
+.government-logo {
+    width: 190px;
+    height: 190px;
+    flex-shrink: 0;
+    object-fit: contain;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 50%;
+    padding: 12px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
 }
 
 .section-header {

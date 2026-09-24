@@ -355,6 +355,103 @@ async function cargarTotalComputadoras() {
 
 }
 
+// =========================================================
+// CARGAR PERIFÉRICOS
+// =========================================================
+
+async function cargarTotalPerifericos() {
+
+    try {
+
+        const respuesta =
+            await apiFetch(
+                "/api/equipos-tecnologicos"
+            );
+
+        if (!respuesta) {
+            return;
+        }
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudieron obtener los periféricos"
+            );
+
+        }
+
+        const perifericos =
+            await respuesta.json();
+
+        mostrarNumero(
+            "totalPerifericos",
+            perifericos.length
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error periféricos:",
+            error
+        );
+
+        mostrarNumero(
+            "totalPerifericos",
+            "—"
+        );
+
+    }
+
+}
+
+// =========================================================
+// CARGAR IMPRESORAS
+// =========================================================
+
+async function cargarTotalImpresoras() {
+
+    try {
+
+        const respuesta =
+            await apiFetch(
+                "/api/impresoras"
+            );
+
+        if (!respuesta) {
+            return;
+        }
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudieron obtener las impresoras"
+            );
+
+        }
+
+        const impresoras =
+            await respuesta.json();
+
+        mostrarNumero(
+            "totalImpresoras",
+            impresoras.length
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error impresoras:",
+            error
+        );
+
+        mostrarNumero(
+            "totalImpresoras",
+            "—"
+        );
+
+    }
+
+}
 
 // =========================================================
 // CARGAR MANTENIMIENTOS
@@ -648,6 +745,10 @@ async function cargarDashboard() {
         cargarTotalFuncionarios(),
 
         cargarTotalComputadoras(),
+
+        cargarTotalPerifericos(),
+
+        cargarTotalImpresoras(),
 
         cargarTotalMantenimientos()
 
